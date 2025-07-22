@@ -3,4 +3,9 @@ project(RISC_V_Sim)
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_executable(RISC_V_Sim main.cpp)
+include_directories(src/include)
+
+add_executable(simulator src/main.cpp)
+
+# Custom unit tests
+add_executable(test_buffered unit_tests/test_buffered.cpp)

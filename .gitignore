@@ -1,1 +1,5 @@
 docs
+testcases/*
+
+.idea
+cmake-build-debug
