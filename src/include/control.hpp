@@ -14,10 +14,16 @@
 #include "rs.hpp"
 
 namespace riscv {
-    inline void boot(const std::string &mem_path) {
-        auto &log = Logger::get();
-        log.as(LogLevel::INFO) << "Booting RISC-V system with memory mirror: " << mem_path;
-    }
+    struct RISCV_Simulator {
+        std::unique_ptr<Memory> memory;
 
-    inline void run() {}
+        void boot(const std::string &mem_path) {
+            auto &log = Logger::get();
+            log.as(LogLevel::INFO) << "Booting RISC-V system with memory mirror: " << mem_path;
+            memory = std::make_unique<Memory>(mem_path);
+        }
+
+        void run() {
+        }
+    };
 }  // namespace riscv

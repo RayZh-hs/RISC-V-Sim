@@ -30,8 +30,9 @@ int main(int argc, char *argv[]) {
     }
 
     if (action == "run") {
-        riscv::boot(config_file);
-        riscv::run();
+        riscv::RISCV_Simulator simulator;
+        simulator.boot(config_file);
+        simulator.run();
     } else {
         logger.as(LogLevel::ERROR) << "Unknown action: " << program.get<std::string>("action");
     }
