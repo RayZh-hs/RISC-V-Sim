@@ -7,7 +7,11 @@
 namespace norb::riscv::constants {
     inline constexpr int memory_size = 4096;
 
-    using buint8_t = norb::Buffered<uint8_t>;
-    using buint16_t = norb::Buffered<uint16_t>;
-    using buint32_t = norb::Buffered<uint32_t>;
+    using b_uint8_t = Buffered<uint8_t>;
+    using b_uint16_t = Buffered<uint16_t>;
+    using b_uint32_t = Buffered<uint32_t>;
+
+    // project-specific typedef
+    using robId_t = uint8_t;
+    using b_robId_t = Buffered<robId_t>;
 }

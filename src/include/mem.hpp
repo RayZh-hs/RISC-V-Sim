@@ -10,7 +10,7 @@ namespace C = norb::riscv::constants;
 namespace norb::riscv {
     namespace impl {
         template <size_t size>
-        void memory_decode(std::array<C::buint8_t, size>& mem, std::istream& is) {
+        void memory_decode(std::array<C::b_uint8_t, size>& mem, std::istream& is) {
             size_t current_pos = 0;
             std::string token;
 
@@ -55,7 +55,7 @@ namespace norb::riscv {
     }  // namespace impl
 
     class Memory {
-        std::array<C::buint8_t, C::memory_size> memory;
+        std::array<C::b_uint8_t, C::memory_size> memory;
 
     public:
         Memory(const std::string& path) {
