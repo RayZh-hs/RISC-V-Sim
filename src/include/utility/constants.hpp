@@ -4,7 +4,7 @@
 #pragma once
 #include "buffered.hpp"
 
-namespace constants {
+namespace norb::riscv::constants {
     inline constexpr int memory_size = 4096;
 
     using buint8_t = norb::Buffered<uint8_t>;

@@ -5,9 +5,9 @@
 
 #include "utility/constants.hpp"
 
-namespace C = constants;
+namespace C = norb::riscv::constants;
 
-namespace riscv {
+namespace norb::riscv {
     namespace impl {
         template <size_t size>
         void memory_decode(std::array<C::buint8_t, size>& mem, std::istream& is) {

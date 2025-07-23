@@ -30,7 +30,7 @@ int main(int argc, char *argv[]) {
     }
 
     if (action == "run") {
-        riscv::RISCV_Simulator simulator;
+        norb::riscv::RISCV_Simulator simulator;
         simulator.boot(config_file);
         simulator.run();
     } else {

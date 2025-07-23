@@ -13,7 +13,7 @@
 #include "rob.hpp"
 #include "rs.hpp"
 
-namespace riscv {
+namespace norb::riscv {
     struct RISCV_Simulator {
         std::unique_ptr<Memory> memory;
 
@@ -24,6 +24,7 @@ namespace riscv {
         }
 
         void run() {
+
         }
     };
 }  // namespace riscv
