@@ -3,4 +3,5 @@ testcases/*
 sample/*
 
 .idea
+.vscode
 cmake-build-debug
