@@ -339,6 +339,7 @@ namespace norb::riscv {
 
     struct Instruction {
         InstructionHeader header;
+        uint32_t raw;
         uint32_t imm;
         uint8_t rd;
         uint8_t rs1;
@@ -407,19 +408,21 @@ namespace norb::riscv {
             }
 
             Instruction ins = {.header = header,
+                               .raw = instruction,
                                .imm = decoded_imm,
                                .rd = static_cast<uint8_t>((instruction >> 7) & 0b11111),
                                .rs1 = static_cast<uint8_t>((instruction >> 15) & 0b11111),
                                .rs2 = static_cast<uint8_t>((instruction >> 20) & 0b11111)};
             return ins;
         }
-    
-        bool is_noop() const {
-            return header.ins_type == NOOP;
-        }
 
-        bool is_halt() const {
-            return header.ins_type == InsType::LUI && rd == 10 && imm == 256;
+        bool is_noop() const { return header.ins_type == NOOP; }
+
+        bool is_halt() const { return header.ins_type == InsType::LUI && rd == 10 && imm == 256; }
+
+        std::ostream &operator<<(std::ostream &os) const {
+            os << "[Instruction " << raw << "]";
+            return os;
         }
     };
 
