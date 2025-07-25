@@ -123,6 +123,10 @@ int main() {
     TEST_THROWS([]{ Instruction::from(0x00003063); }, "Throws on invalid B-Type func3");
     TEST_THROWS([]{ Instruction::from(0x04C58533); }, "Throws on invalid R-Type func7");
 
+    {
+        Instruction ins = noop;
+        ASSERT_EQUAL(ins.header.ins_type, NOOP, "NOOP: Type");
+    }
 
     // --- Final Report ---
     std::cout << "--------------------------------------\n";
