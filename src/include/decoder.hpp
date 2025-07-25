@@ -413,6 +413,14 @@ namespace norb::riscv {
                                .rs2 = static_cast<uint8_t>((instruction >> 20) & 0b11111)};
             return ins;
         }
+    
+        bool is_noop() const {
+            return header.ins_type == NOOP;
+        }
+
+        bool is_halt() const {
+            return header.ins_type == InsType::LUI && rd == 10 && imm == 256;
+        }
     };
 
     inline constexpr static Instruction noop{};

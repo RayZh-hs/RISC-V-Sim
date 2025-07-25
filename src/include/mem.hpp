@@ -62,5 +62,37 @@ namespace norb::riscv {
             std::ifstream file(path);
             impl::memory_decode(memory, file);
         }
+
+        // read 4 bytes of data from the memory, in Little Endian
+        [[nodiscard]] uint32_t read(uint32_t index) const {
+            if (index + 3 >= C::memory_size) {
+                throw std::out_of_range("Memory read out of bounds at index: " + std::to_string(index));
+            }
+            // both | and + work here
+            return (memory[index].read() | (memory[index + 1].read() << 8) | (memory[index + 2].read() << 16) |
+                    (memory[index + 3].read() << 24));
+        }
     };
-}  // namespace riscv
+
+    struct LoadStoreBufferEntry {
+        uint32_t address;
+    };
+
+    // Load Store Buffer
+    class LoadStoreBuffer {
+    private:
+        std::unique_ptr<Memory> memory;
+
+    public:
+        void load_memory(const std::string& mem_path) {
+            memory = std::make_unique<Memory>(mem_path);
+        }
+
+        uint32_t get_instruction(uint32_t index) const {
+            if (!memory) {
+                throw std::runtime_error("Memory not loaded.");
+            }
+            return memory->read(index);
+        }
+    };
+}  // namespace norb::riscv
