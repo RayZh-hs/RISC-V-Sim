@@ -3,32 +3,40 @@
 
 #pragma once
 
-#include "rob.hpp"
-#include "utility/constants.hpp"
-
-namespace C = norb::riscv::constants;
+#include "define/reg.hpp"
 
 namespace norb::riscv {
 
-    enum RegName {
-        ZERO = 0,  // Zero register
-        RA = 1,  // Return address
-        A0 = 10,  // Argument 0
-    };
+    inline std::optional<rob_pointer_t> RegisterFile::read_host(int index) const {
+        if (index < 0 or index >= C::register_file_size) {
+            throw std::out_of_range("RegisterFile::read_host out of range");
+        }
+        if (index == 0) {
+            return std::nullopt;
+        }
+        if (registers[index].has_host.read()) {
+            return registers[index].host.read();
+        }
+        return std::nullopt;
+    }
 
-    struct Register {
-        C::b_uint32_t value;
-        rob_pointer_t host{};
+    inline uint32_t RegisterFile::read(int index) const {
+        return registers[index].value.read();
+    }
 
-        Register() : value(0) {}
-    };
+    inline void RegisterFile::write(int index, uint32_t value) {
+        registers[index].value.write(value);
+    }
 
-    class RegisterFile {
-        Register registers[C::register_file_size];
+    inline void RegisterFile::write_host(int index, const rob_pointer_t &host) {
+        if (index < 0 or index >= C::register_file_size) {
+            throw std::out_of_range("RegisterFile::write_host out of range");
+        }
+        if (index == 0) {
+            return;  // Zero register does not have a host
+        }
+        registers[index].host.write(host);
+        registers[index].has_host.write(true);
+    }
 
-    public:
-        [[nodiscard]] uint32_t read(int index) const { return registers[index].value.read(); }
-
-        void write(int index, uint32_t value) { registers[index].value.write(value); }
-    };
 }  // namespace norb::riscv
