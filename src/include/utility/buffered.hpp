@@ -5,6 +5,14 @@
 #pragma once
 #include <algorithm>
 #include <vector>
+#include <stdexcept>
+
+namespace norb {
+    class AssertionError final : public std::runtime_error {
+    public:
+        explicit AssertionError(const std::string& message) : std::runtime_error(message) {}
+    };
+}
 
 namespace norb {
     namespace impl {
@@ -55,11 +63,37 @@ namespace norb {
 
     }  // namespace impl
 
+    // A utility class that ensures lock() is only called once per cycle
+    class Lock: public impl::BufferedFlushInterface_ {
+        bool value = false;
+
+    public:
+        Lock() {
+            impl::BufferedManager::add(this);
+        }
+
+        ~Lock() override {
+            impl::BufferedManager::remove(this);
+        }
+
+        void lock() {
+            if (value) {
+                throw AssertionError("Lock violated!");
+            }
+            value = true;
+        }
+
+        void flush() override {
+            value = false;
+        }
+    };
+
     template <typename T>
     class Buffered : public impl::BufferedFlushInterface_ {
     private:
         T old_value;
         T new_value;
+        Lock write_lock;
 
     public:
         explicit Buffered() { impl::BufferedManager::add(this); }
@@ -75,7 +109,10 @@ namespace norb {
 
         T read() const { return old_value; }
 
-        void write(T value) { new_value = value; }
+        void write(T value) {
+            write_lock.lock();
+            new_value = value;
+        }
 
         void flush() override { old_value = new_value; }
 
