@@ -12,13 +12,13 @@ namespace norb::riscv {
 
     enum RegName {
         ZERO = 0,  // Zero register
-        RA = 1,    // Return address
-        A0 = 10,   // Argument 0
+        RA = 1,  // Return address
+        A0 = 10,  // Argument 0
     };
 
     struct Register {
         C::b_uint32_t value;
-        ReOrderBuffer::rob_pointer_t host;
+        rob_pointer_t host{};
 
         Register() : value(0) {}
     };
