@@ -39,7 +39,6 @@ namespace norb::riscv {
         uint32_t vk{};
         uint32_t vj{};
         uint32_t imm{};
-        uint32_t starting_time;
 
         explicit ResolvedInstructionEntry(const ResolverEntry &ent);
     };

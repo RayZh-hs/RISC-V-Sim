@@ -15,10 +15,7 @@
 namespace norb::riscv {
 
     inline ResolvedInstructionEntry::ResolvedInstructionEntry(const ResolverEntry &ent) :
-        type(ent.type), rob_pointer(ent.rob_pointer), vk(ent.vk), vj(ent.vj), imm(ent.imm) {
-        const auto now = Clock::instance().now();
-        starting_time = now;
-    }
+        type(ent.type), rob_pointer(ent.rob_pointer), vk(ent.vk), vj(ent.vj), imm(ent.imm) {}
 
     inline std::string ResolverEntry::repr() const {
         return "ResolverEntry(type=" + ins_type_names[static_cast<int>(type)] +
@@ -35,7 +32,7 @@ namespace norb::riscv {
     class CommonDependencyResolver {
         BufferedArray<ResolverEntry, Capacity> buffer;
         std::unique_ptr<CommonDataBus> cdb_ref;
-        ChannelReader<ResolverEntry> chan_inbound;
+        ChannelReader<ResolverEntry> chan_inbound{};
 
     public:
         void bind_inbound_to(norb::ChannelWriter<ResolverEntry> &chw) {
