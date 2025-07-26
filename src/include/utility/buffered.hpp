@@ -4,15 +4,16 @@
 
 #pragma once
 #include <algorithm>
-#include <vector>
+#include <optional>
 #include <stdexcept>
+#include <vector>
 
 namespace norb {
     class AssertionError final : public std::runtime_error {
     public:
         explicit AssertionError(const std::string& message) : std::runtime_error(message) {}
     };
-}
+}  // namespace norb
 
 namespace norb {
     namespace impl {
@@ -64,17 +65,13 @@ namespace norb {
     }  // namespace impl
 
     // A utility class that ensures lock() is only called once per cycle
-    class Lock: public impl::BufferedFlushInterface_ {
+    class Lock : public impl::BufferedFlushInterface_ {
         bool value = false;
 
     public:
-        Lock() {
-            impl::BufferedManager::add(this);
-        }
+        Lock() { impl::BufferedManager::add(this); }
 
-        ~Lock() override {
-            impl::BufferedManager::remove(this);
-        }
+        ~Lock() override { impl::BufferedManager::remove(this); }
 
         void lock() {
             if (value) {
@@ -83,9 +80,7 @@ namespace norb {
             value = true;
         }
 
-        void flush() override {
-            value = false;
-        }
+        void flush() override { value = false; }
     };
 
     template <typename T>
@@ -109,7 +104,7 @@ namespace norb {
 
         T read() const { return old_value; }
 
-        void write(T value) {
+        void write(const T &value) {
             write_lock.lock();
             new_value = value;
         }
@@ -121,6 +116,35 @@ namespace norb {
         Buffered& operator=(const T& value) {
             new_value = value;
             return *this;
+        }
+    };
+
+    template <typename T>
+    class TemporarilyBuffered : public impl::BufferedFlushInterface_ {
+    private:
+        std::optional<T> old_value = std::nullopt;
+        std::optional<T> new_value = std::nullopt;
+        Lock write_lock;
+
+    public:
+        explicit TemporarilyBuffered() { impl::BufferedManager::add(this); }
+        explicit TemporarilyBuffered(const T& ori) : old_value(ori), new_value(ori) {
+            impl::BufferedManager::add(this);
+        }
+        ~TemporarilyBuffered() override { impl::BufferedManager::remove(this); }
+
+        auto read() const {
+            return old_value;
+        }
+
+        void write(const T &value) {
+            write_lock.lock();
+            new_value = value;
+        }
+
+        void flush() override {
+            old_value = new_value;
+            new_value = std::nullopt;
         }
     };
 
