@@ -3,53 +3,31 @@
 
 #pragma once
 
-#include <cstdint>
 #include <memory>
 #include <optional>
 
 #include "cdb.hpp"
-#include "decoder.hpp"
-#include "define/cdb.hpp"
+#include "define/cdr.hpp"
 #include "third_party/array.hpp"
 #include "third_party/logger.hpp"
 #include "utility/clock.hpp"
 
 namespace norb::riscv {
 
-    enum class ResolverEntryStatus {
-        EMPTY,  // instruction has been executed
-        PENDING,  // waiting for dependencies to be resolved
-        READY,  // all dependencies are resolved
-        EXECUTING,  // currently executing the instruction
-    };
+    inline ResolvedInstructionEntry::ResolvedInstructionEntry(const ResolverEntry &ent) :
+        type(ent.type), rob_pointer(ent.rob_pointer), vk(ent.vk), vj(ent.vj), imm(ent.imm) {
+        const auto now = Clock::instance().now();
+        starting_time = now;
+    }
 
-    struct ResolverEntry {
-        InsType type = InsType::NOOP;
-        ResolverEntryStatus status = ResolverEntryStatus::PENDING;
-        rob_pointer_t rob_pointer;
-        bool k_is_ready = false;
-        bool j_is_ready = false;
-        uint32_t vk{};
-        uint32_t vj{};
-        rob_pointer_t qk;
-        rob_pointer_t qj;
-        uint32_t imm{};
-    };
-
-    struct ResolvedInstructionEntry {
-        InsType type = InsType::NOOP;
-        rob_pointer_t rob_pointer;
-        uint32_t vk{};
-        uint32_t vj{};
-        uint32_t imm{};
-        uint32_t starting_time;
-
-        explicit ResolvedInstructionEntry(const ResolverEntry &ent) :
-            type(ent.type), rob_pointer(ent.rob_pointer), vk(ent.vk), vj(ent.vj), imm(ent.imm) {
-            const auto now = Clock::instance().now();
-            starting_time = now;
-        }
-    };
+    inline std::string ResolverEntry::repr() const {
+        return "ResolverEntry(type=" + ins_type_names[static_cast<int>(type)] +
+               ", status=" + std::to_string(static_cast<int>(status)) +
+               ", rob_pointer=" + std::to_string(rob_pointer.repr()) +
+               ", vk=" + std::to_string(vk) +
+               ", vj=" + std::to_string(vj) +
+               ", imm=" + std::to_string(imm) + ")";
+    }
 
     // A Common Dependency Resolver (CDR) is responsible for managing dependencies
     // It listens for broadcasts and waits for the dependencies to be resolved
@@ -57,9 +35,32 @@ namespace norb::riscv {
     class CommonDependencyResolver {
         BufferedArray<ResolverEntry, Capacity> buffer;
         std::unique_ptr<CommonDataBus> cdb_ref;
+        ChannelReader<ResolverEntry> chan_inbound;
 
     public:
+        void bind_inbound_to(norb::ChannelWriter<ResolverEntry> &chw) {
+            make_channel(chw, chan_inbound);
+        }
+
         [[nodiscard]] bool full() const { return buffer.full(); }
+
+        void listen_inbound() {
+            auto &log = Logger::get();
+            if (chan_inbound.has_data()) {
+                log.as(LogLevel::DEBUG) << "[CDR] Acquired new data";
+                const auto idx_new_entry = buffer.find_if([](const ResolverEntry &entry) {
+                    return entry.status == ResolverEntryStatus::EMPTY;
+                });
+                if (idx_new_entry == -1)    {
+                    log.as(LogLevel::DEBUG) << "[CDR] The buffer is already full";
+                    return;  // this means that the array is full
+                }
+                const auto new_entry = chan_inbound.read();
+                // now insert into the place of the new entry
+                log.as(LogLevel::INFO) << "[CDR] Writing new instruction=" << 
+                buffer.write_at(idx_new_entry, new_entry);
+            }
+        }
 
         void listen_broadcast() {
             auto &log = Logger::get();
@@ -110,14 +111,14 @@ namespace norb::riscv {
                                         << " | rob_pointer=" << ent.rob_pointer.repr();
                 return ResolvedInstructionEntry(ent);
             }
-        }   
+        }
 
         void submit_executed_entry(rob_pointer_t rob_pointer, uint32_t value) {
             auto &log = Logger::get();
             // search the database for the rob_pointer
             for (int i = 0; i < Capacity; ++i) {
                 auto ent = buffer.read_at(i);
-                if (ent.type == ResolverEntryStatus::EXECUTING and ent.rob_pointer == rob_pointer) {
+                if (ent.status == ResolverEntryStatus::EXECUTING and ent.rob_pointer == rob_pointer) {
                     log.as(LogLevel::DEBUG) << "[CDR] Submitting executed entry at index " << i
                                             << " with rob_pointer=" << rob_pointer.repr() << " and value=" << value;
                     // update the array

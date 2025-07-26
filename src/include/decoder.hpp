@@ -160,6 +160,12 @@ namespace norb::riscv {
         REG,  // LUI
     };
 
+    const std::string ins_type_names[] = {
+        "NOOP",  // Custom Defined
+        "ADD",  "SUB",  "AND",  "OR",   "XOR",  "SLL",   "SRL", "SRA", "SLT",  "SLTU",  "ADDI", "ANDI", "ORI",
+        "XORI", "SLLI", "SRLI", "SRAI", "SLTI", "SLTIU", "LB",  "LBU", "LH",   "LHU",   "LW",   "SB",   "SH",
+        "SW",   "BEQ",  "BGE",  "BGEU", "BLT",  "BLTU",  "BNE", "JAL", "JALR", "AUIPC", "LUI"};
+
     struct InstructionHeader {
         uint8_t op_code;
         uint8_t func3;
@@ -420,9 +426,19 @@ namespace norb::riscv {
 
         bool is_halt() const { return header.ins_type == InsType::LUI && rd == 10 && imm == 256; }
 
+        // ! Deprecated: Use the new repr() method instead
         std::ostream &operator<<(std::ostream &os) const {
             os << "[Instruction " << raw << "]";
             return os;
+        }
+
+        std::string repr() const {
+            return "Instruction(type=" + ins_type_names[static_cast<int>(header.ins_type)] +
+                   ", raw=" + std::to_string(raw) +
+                   ", rd=" + std::to_string(rd) +
+                   ", rs1=" + std::to_string(rs1) +
+                   ", rs2=" + std::to_string(rs2) +
+                   ", imm=" + std::to_string(imm) + ")";
         }
     };
 

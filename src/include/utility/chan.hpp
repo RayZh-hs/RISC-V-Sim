@@ -24,6 +24,7 @@ namespace norb {
     public:
         ChannelReader(std::shared_ptr<Buffered<T>> data_, std::shared_ptr<Buffered<bool>> has_data_) :
             data_(std::move(data_)), has_data_(std::move(has_data_)) {}
+        ChannelReader() : data_(nullptr), has_data_(nullptr) {}
 
         [[nodiscard]] bool has_data() const { return has_data_->read(); }
 
@@ -46,6 +47,9 @@ namespace norb {
     public:
         ChannelWriter(std::shared_ptr<Buffered<T>> data_, std::shared_ptr<Buffered<bool>> has_data_) :
             data_(std::move(data_)), has_data_(std::move(has_data_)) {}
+        ChannelWriter() : data_(nullptr), has_data_(nullptr) {}
+
+        [[nodiscard]] bool is_connected() const { return data_ != nullptr && has_data_ != nullptr; }
 
         [[nodiscard]] bool has_data() const { return has_data_->read(); }
 
@@ -60,11 +64,11 @@ namespace norb {
 
     // Factory function to create connected reader and writer
     template <typename T>
-    void make_channel(std::unique_ptr<ChannelReader<T>>& reader, std::unique_ptr<ChannelWriter<T>>& writer) {
+    void make_channel(ChannelWriter<T> &writer, ChannelReader<T> &reader) {
         auto data = std::make_shared<Buffered<T>>();
         auto has_data = std::make_shared<Buffered<bool>>(false);
 
-        reader = std::make_unique<ChannelReader<T>>(data, has_data);
-        writer = std::make_unique<ChannelWriter<T>>(data, has_data);
+        reader = ChannelReader<T>(data, has_data);
+        writer = ChannelWriter<T>(data, has_data);
     }
 }  // namespace norb
