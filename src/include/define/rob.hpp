@@ -8,6 +8,7 @@
 #include "utility/constants.hpp"
 #include "third_party/queue.hpp"
 #include "decoder.hpp"
+#include "define/cdr.hpp"
 
 namespace C = norb::riscv::constants;
 

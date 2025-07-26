@@ -30,7 +30,7 @@ namespace norb::riscv {
         rob_pointer_t qj;
         uint32_t imm{};
 
-        std::string repr() const;
+        [[nodiscard]] std::string repr() const;
     };
 
     struct ResolvedInstructionEntry {
