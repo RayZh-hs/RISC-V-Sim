@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <stack>
+#include <queue>
 
 #include "define/cdb.hpp"
 
@@ -11,31 +11,31 @@ namespace norb::riscv {
     // This is the only system in the RISC-V simulator that does not follow strict latch logic
     // It is designed so for simpler interface and to let multiple dataflows through
     class CommonDataBus {
-        std::stack<BroadcastEntry> broadcast_stack_;
+        std::queue<BroadcastEntry> broadcast_queue_;
 
     public:
         CommonDataBus() = default;
 
         void broadcast(const BroadcastEntry& entry) {
-            broadcast_stack_.push(entry);
+            broadcast_queue_.push(entry);
         }
 
-        bool empty() const {
-            return broadcast_stack_.empty();
+        [[nodiscard]] bool empty() const {
+            return broadcast_queue_.empty();
         }
 
-        BroadcastEntry read() {
-            return broadcast_stack_.top();
+        [[nodiscard]] BroadcastEntry read() const {
+            return broadcast_queue_.front();
         }
 
         // This method is called on falling edge
         void flush() {
-            broadcast_stack_.pop();
+            broadcast_queue_.pop();
         }
 
         void clear() {
-            while (not broadcast_stack_.empty()) {
-                broadcast_stack_.pop();
+            while (not broadcast_queue_.empty()) {
+                broadcast_queue_.pop();
             }
         }
     };

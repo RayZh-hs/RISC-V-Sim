@@ -283,6 +283,10 @@ namespace norb {
                 _queue->_storage[_physical_idx].write(value);
             }
 
+            [[nodiscard]] int repr() const {
+                return _physical_idx;
+            }
+
             base_iterator& operator++() {
                 _physical_idx = (_physical_idx + 1) % InternalCapacity;
                 return *this;
