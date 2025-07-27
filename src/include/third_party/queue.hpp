@@ -117,6 +117,9 @@ namespace norb {
 
             bool is_dereferenceable() const { return _physical_idx != _queue->_tail; }
 
+            // Added for hash support - returns physical index for hashing
+            [[nodiscard]] size_type physical_index() const noexcept { return _physical_idx; }
+
             container_type* _queue;
             size_type _physical_idx;
         };
@@ -290,6 +293,11 @@ namespace norb {
             template <typename Q>
             auto that_of(FixedBufferedQueue<Q, Capacity> *other) const {
                 return typename FixedBufferedQueue<Q, Capacity>::base_iterator<IsConst>(other, _physical_idx);
+            }
+
+            [[nodiscard]] int physical_index() const {
+                assert(_queue && "Iterator is not associated with a container.");
+                return _physical_idx;
             }
 
             base_iterator& operator++() {

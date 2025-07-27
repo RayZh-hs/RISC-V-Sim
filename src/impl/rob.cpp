@@ -80,7 +80,7 @@ namespace norb::riscv {
                         chw = &chan_rob_rs_next_instruction;
                         break;
                     case InsPos::LSB:
-                        // todo
+                        chw = &chan_rob_lsb_next_instruction;
                         break;
                     case InsPos::BRANCH:
                         // todo

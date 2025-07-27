@@ -69,13 +69,27 @@ namespace norb::riscv {
         }
 
         // read 4 bytes of data from the memory, in Little Endian
-        [[nodiscard]] uint32_t read(uint32_t index) const {
+        [[nodiscard]] uint32_t read_word(uint32_t index) const {
             if (index + 3 >= C::memory_size) {
                 throw std::out_of_range("Memory read out of bounds at index: " + std::to_string(index));
             }
             // both | and + work here
             return (memory[index].read() | (memory[index + 1].read() << 8) | (memory[index + 2].read() << 16) |
                     (memory[index + 3].read() << 24));
+        }
+
+        [[nodiscard]] uint8_t read_byte(uint32_t index) const {
+            if (index >= C::memory_size) {
+                throw std::out_of_range("Memory read out of bounds at index: " + std::to_string(index));
+            }
+            return memory[index].read();
+        }
+
+        void write_byte(uint32_t index, uint8_t value) {
+            if (index >= C::memory_size) {
+                throw std::out_of_range("Memory write out of bounds at index: " + std::to_string(index));
+            }
+            memory[index].write(value);
         }
     };
 

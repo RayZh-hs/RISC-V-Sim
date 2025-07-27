@@ -28,6 +28,7 @@ namespace norb::riscv {
         ReservationStation rs;
 
         Bus<bool> bus_rob_has_committed_exit;
+        TemporaryBus<rob_pointer_t> bus_con_commit;
         ChannelWriter<Instruction> chan_con_rob_next_instruction;
 
         // Connects the buses between all components (hardware linking)

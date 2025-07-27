@@ -8,12 +8,14 @@
 namespace norb::riscv {
 
     void RISCV_Simulator::connect_buses() { 
-        bus_rob_has_committed_exit.connect(rob.bus_rob_has_committed_exit); 
+        bus_rob_has_committed_exit.connect(rob.bus_rob_has_committed_exit);
+        lsb.set_commit_bus(bus_con_commit);
     }
 
     void RISCV_Simulator::connect_channels() {
         make_channel(chan_con_rob_next_instruction, rob.chan_con_rob_next_instruction);
         rs.resolver.bind_inbound_to(rob.chan_rob_rs_next_instruction);
+        lsb.resolver.bind_inbound_to(rob.chan_rob_lsb_next_instruction);
     }
 
     void RISCV_Simulator::print_result() const {
@@ -40,18 +42,21 @@ namespace norb::riscv {
         // Issue instructions from the ReOrder Buffer to the Reservation Station and Load-Store Buffer
         rob.issue();
         rs.on_issue();
+        lsb.on_issue();
     }
 
     void RISCV_Simulator::execute() {
         rs.on_execute();
+        lsb.on_execute();
     }
 
     void RISCV_Simulator::write_and_broadcast() {
         rs.on_broadcast();
+        lsb.on_broadcast();
     }
 
     void RISCV_Simulator::commit() {
-        // TODO: Implement commit functionality
+        lsb.on_commit();
     }
 
     void RISCV_Simulator::tidy() {

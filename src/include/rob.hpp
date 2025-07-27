@@ -30,6 +30,23 @@ namespace norb::riscv {
 
     using rob_main_buffer_t = FixedBufferedQueue<ROBEntry, C::reorder_buffer_size>;
     using rob_pointer_t = rob_main_buffer_t::iterator;
+    inline rob_pointer_t rob_nullptr = rob_main_buffer_t::iterator();
+
+}  // namespace norb::riscv
+
+// Hash specialization for rob_pointer_t to make it usable in unordered containers
+// (software specifications)
+namespace std {
+    template <>
+    struct hash<norb::riscv::rob_pointer_t> {
+        size_t operator()(const norb::riscv::rob_pointer_t& it) const noexcept {
+            // Use the physical index as the hash value
+            return std::hash<size_t>{}(it.physical_index());
+        }
+    };
+}
+
+namespace norb::riscv {
 
     enum class ResolverEntryStatus {
         EMPTY,  // instruction has been executed
@@ -75,6 +92,7 @@ namespace norb::riscv {
 
         // - reservation station
         ChannelWriter<ResolverEntry> chan_rob_rs_next_instruction;
+        ChannelWriter<ResolverEntry> chan_rob_lsb_next_instruction;
 
     private:
         rob_main_buffer_t main_buffer;

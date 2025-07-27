@@ -5,6 +5,7 @@
 
 #include "utility/clock.hpp"
 #include "third_party/array.hpp"
+#include <cassert>
 
 namespace norb {
     template <typename T, int Delay, size_t Capacity>
