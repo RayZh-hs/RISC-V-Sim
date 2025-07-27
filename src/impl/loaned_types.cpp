@@ -9,7 +9,8 @@ namespace norb::riscv {
     ROBEntry::ROBEntry() : instruction(noop), status(ROBEntryStatus::EMPTY), result(0) {}
 
     ResolvedInstructionEntry::ResolvedInstructionEntry(const ResolverEntry &ent) :
-        type(ent.type), rob_pointer(ent.rob_pointer), vk(ent.vk), vj(ent.vj), imm(ent.imm) {}
+        type(ent.type), rob_pointer(ent.rob_pointer), vk(ent.vk), vj(ent.vj), imm(ent.imm),
+        pc(ent.pc), had_jumped(ent.had_jumped) {}
 
     std::string ResolverEntry::repr() const {
         return "ResolverEntry(type=" + ins_type_names[static_cast<int>(type)] +

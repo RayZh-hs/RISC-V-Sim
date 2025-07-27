@@ -26,6 +26,7 @@ namespace norb::riscv {
         ReOrderBuffer rob;
         ProgramCounter pc;
         ReservationStation rs;
+        BranchAnalyzer ba;
 
         Bus<bool> bus_rob_has_committed_exit;
         TemporaryBus<rob_pointer_t> bus_con_commit;
@@ -46,7 +47,7 @@ namespace norb::riscv {
         [[nodiscard]] bool check_for_exit() const;
 
     public:
-        RISCV_Simulator() : reg(), rob(reg) {
+        RISCV_Simulator() : reg(), rob(reg), ba() {
             auto &log = Logger::get();
             log.as(LogLevel::DEBUG) << "Setting up hardware RISC-V connections";
             connect_buses();

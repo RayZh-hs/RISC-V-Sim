@@ -4,18 +4,19 @@
 #pragma once
 
 #include <cstdint>
+
 #include "decoder.hpp"
+#include "third_party/queue.hpp"
 #include "utility/bus.hpp"
 #include "utility/chan.hpp"
 #include "utility/constants.hpp"
-#include "third_party/queue.hpp"
 
 namespace C = norb::riscv::constants;
 
 namespace norb::riscv {
     class RegisterFile;  // Forward declaration
     struct ResolverEntry;
-    
+
     // ROB types
     enum class ROBEntryStatus { EMPTY, READY, ISSUED, COMMITTED };
 
@@ -39,12 +40,12 @@ namespace norb::riscv {
 namespace std {
     template <>
     struct hash<norb::riscv::rob_pointer_t> {
-        size_t operator()(const norb::riscv::rob_pointer_t& it) const noexcept {
+        size_t operator()(const norb::riscv::rob_pointer_t &it) const noexcept {
             // Use the physical index as the hash value
             return std::hash<size_t>{}(it.physical_index());
         }
     };
-}
+}  // namespace std
 
 namespace norb::riscv {
 
@@ -66,6 +67,8 @@ namespace norb::riscv {
         rob_pointer_t qk;
         rob_pointer_t qj;
         uint32_t imm{};
+        bool had_jumped = false;
+        uint32_t pc = 0;  // Program Counter at the time of instruction fetch
 
         [[nodiscard]] std::string repr() const;
     };
@@ -76,13 +79,15 @@ namespace norb::riscv {
         uint32_t vk{};
         uint32_t vj{};
         uint32_t imm{};
+        bool had_jumped = false;
+        uint32_t pc = 0;  // Program Counter at the time of instruction fetch
 
         explicit ResolvedInstructionEntry(const ResolverEntry &ent);
         ResolvedInstructionEntry() = default;
     };
 
     using rob_resolver_buffer_t = FixedBufferedQueue<ResolverEntry, C::reorder_buffer_size>;
-    
+
     class ReOrderBuffer {
     public:
         // Communication buses
@@ -93,6 +98,7 @@ namespace norb::riscv {
         // - reservation station
         ChannelWriter<ResolverEntry> chan_rob_rs_next_instruction;
         ChannelWriter<ResolverEntry> chan_rob_lsb_next_instruction;
+        ChannelWriter<ResolverEntry> chan_rob_ba_next_instruction;
 
     private:
         rob_main_buffer_t main_buffer;

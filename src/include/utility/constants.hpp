@@ -12,6 +12,9 @@ namespace norb::riscv::constants {
 
     inline constexpr int reservation_station_size = 32;
     inline constexpr int load_store_buffer_size = 32;
+    inline constexpr int branch_analyzer_size = 32;
+
+    inline constexpr uint32_t wrong_branch_token = -1;
 
     inline constexpr int alu_calc_delay = 1;
     inline constexpr int mem_access_delay = 3;

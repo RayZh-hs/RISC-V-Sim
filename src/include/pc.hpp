@@ -4,6 +4,7 @@
 #pragma once
 
 #include "utility/constants.hpp"
+#include <cstdint>
 namespace C = norb::riscv::constants;
 
 namespace norb::riscv
@@ -21,15 +22,15 @@ namespace norb::riscv
             val = 0;
         }
 
-        [[nodiscard]] u_int32_t read() const {
+        [[nodiscard]] uint32_t read() const {
             return val.read();
         }
 
-        void write(u_int32_t new_val) {
+        void write(uint32_t new_val) {
             val.write(new_val);
         }
 
-        void add(u_int32_t offset = 4) {
+        void add(uint32_t offset = 4) {
             val.write(val.read() + offset);
         }
     };

@@ -2,6 +2,7 @@
 // - implements decoding of instructions
 
 #include "decoder.hpp"
+
 #include <stdexcept>
 
 namespace norb::riscv {
@@ -240,35 +241,29 @@ namespace norb::riscv {
                            .imm = decoded_imm,
                            .rd = static_cast<uint8_t>((instruction >> 7) & 0b11111),
                            .rs1 = static_cast<uint8_t>((instruction >> 15) & 0b11111),
-                           .rs2 = static_cast<uint8_t>((instruction >> 20) & 0b11111)};
+                           .rs2 = static_cast<uint8_t>((instruction >> 20) & 0b11111),
+                           // The last two fields are manually set 
+                           .had_jumped = false,
+                           .pc = 0};
         return ins;
     }
 
-    bool Instruction::is_noop() const { 
-        return header.ins_type == NOOP; 
-    }
+    bool Instruction::is_noop() const { return header.ins_type == NOOP; }
 
-    bool Instruction::is_halt() const { 
-        return header.ins_type == InsType::LUI && rd == 10 && imm == 256; 
-    }
+    bool Instruction::is_halt() const { return header.ins_type == InsType::LUI && rd == 10 && imm == 256; }
 
     std::ostream &Instruction::operator<<(std::ostream &os) const {
         os << "[Instruction " << raw << "]";
         return os;
     }
 
-    // Free function for stream insertion - needed for template compatibility  
-    std::ostream &operator<<(std::ostream &os, const Instruction &ins) {
-        return ins.operator<<(os);
-    }
+    // Free function for stream insertion - needed for template compatibility
+    std::ostream &operator<<(std::ostream &os, const Instruction &ins) { return ins.operator<<(os); }
 
     std::string Instruction::repr() const {
         return "Instruction(type=" + ins_type_names[static_cast<int>(header.ins_type)] +
-               ", raw=" + std::to_string(raw) +
-               ", rd=" + std::to_string(rd) +
-               ", rs1=" + std::to_string(rs1) +
-               ", rs2=" + std::to_string(rs2) +
-               ", imm=" + std::to_string(imm) + ")";
+            ", raw=" + std::to_string(raw) + ", rd=" + std::to_string(rd) + ", rs1=" + std::to_string(rs1) +
+            ", rs2=" + std::to_string(rs2) + ", imm=" + std::to_string(imm) + ")";
     }
 
 }  // namespace norb::riscv

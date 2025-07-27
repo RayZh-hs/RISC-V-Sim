@@ -190,6 +190,8 @@ namespace norb::riscv {
         uint8_t rd;
         uint8_t rs1;
         uint8_t rs2;
+        bool had_jumped;
+        uint32_t pc;    // Program Counter at the time of instruction fetch, important for rollback
 
         static Instruction from(uint32_t instruction);
 

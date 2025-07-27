@@ -58,6 +58,9 @@ namespace norb::riscv {
             resolver_entry.status = (resolver_entry.k_is_ready and resolver_entry.j_is_ready) ? ResolverEntryStatus::READY
                                                                             : ResolverEntryStatus::PENDING;
             resolver_entry.rob_pointer = it;
+            resolver_entry.imm = ins.imm;
+            resolver_entry.had_jumped = ins.had_jumped;
+            resolver_entry.pc = ins.pc;
             // record the resolver entry
             resolver_buffer.push_back(resolver_entry);
             // then update the dependency in the register file
@@ -83,7 +86,7 @@ namespace norb::riscv {
                         chw = &chan_rob_lsb_next_instruction;
                         break;
                     case InsPos::BRANCH:
-                        // todo
+                        chw = &chan_rob_ba_next_instruction;
                         break;
                     case InsPos::REG:
                         // todo

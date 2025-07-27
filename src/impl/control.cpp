@@ -16,6 +16,7 @@ namespace norb::riscv {
         make_channel(chan_con_rob_next_instruction, rob.chan_con_rob_next_instruction);
         rs.resolver.bind_inbound_to(rob.chan_rob_rs_next_instruction);
         lsb.resolver.bind_inbound_to(rob.chan_rob_lsb_next_instruction);
+        ba.resolver.bind_inbound_to(rob.chan_rob_ba_next_instruction);
     }
 
     void RISCV_Simulator::print_result() const {
@@ -31,8 +32,15 @@ namespace norb::riscv {
     void RISCV_Simulator::instruction_fetch() {
         if (!chan_con_rob_next_instruction.has_data()) {
             // we can write into it
-            const uint32_t raw_ins = pc.read();
-            const auto ins = Instruction::from(raw_ins);
+            const uint32_t raw_ins = lsb.get_instruction(pc.read());
+            auto ins = Instruction::from(raw_ins);
+            // ask the branch analyzer to predict the pc
+            // it should return pc + 4 if ins is not a branch instruction
+            const auto predicted_pc = ba.predict_pc(pc.read(), ins);
+            pc.write(predicted_pc);
+            ins.had_jumped = (predicted_pc != pc.read() + 4);   // if imm == 4 this cannot be wrongly predicted
+            ins.pc = pc.read();
+            // now the instruction forwarded to the BA by ROB will have been tagged to ensure correct rollback
             chan_con_rob_next_instruction.write(ins);
         }
         rob.instruction_fetch();
@@ -43,6 +51,7 @@ namespace norb::riscv {
         rob.issue();
         rs.on_issue();
         lsb.on_issue();
+        ba.on_issue();
     }
 
     void RISCV_Simulator::execute() {
@@ -53,6 +62,7 @@ namespace norb::riscv {
     void RISCV_Simulator::write_and_broadcast() {
         rs.on_broadcast();
         lsb.on_broadcast();
+        ba.on_broadcast();
     }
 
     void RISCV_Simulator::commit() {
