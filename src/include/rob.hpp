@@ -14,6 +14,7 @@ namespace C = norb::riscv::constants;
 
 namespace norb::riscv {
     class RegisterFile;  // Forward declaration
+    struct ResolverEntry;
     
     // ROB types
     enum class ROBEntryStatus { EMPTY, READY, ISSUED, COMMITTED };
@@ -27,8 +28,8 @@ namespace norb::riscv {
         ROBEntry(Instruction ins, ROBEntryStatus status, uint32_t result);
     };
 
-    using rob_buffer_t = FixedBufferedQueue<ROBEntry, C::reorder_buffer_size>;
-    using rob_pointer_t = rob_buffer_t::iterator;
+    using rob_main_buffer_t = FixedBufferedQueue<ROBEntry, C::reorder_buffer_size>;
+    using rob_pointer_t = rob_main_buffer_t::iterator;
 
     enum class ResolverEntryStatus {
         EMPTY,  // instruction has been executed
@@ -62,6 +63,8 @@ namespace norb::riscv {
         explicit ResolvedInstructionEntry(const ResolverEntry &ent);
         ResolvedInstructionEntry() = default;
     };
+
+    using rob_resolver_buffer_t = FixedBufferedQueue<ResolverEntry, C::reorder_buffer_size>;
     
     class ReOrderBuffer {
     public:
@@ -74,7 +77,8 @@ namespace norb::riscv {
         ChannelWriter<ResolverEntry> chan_rob_rs_next_instruction;
 
     private:
-        rob_buffer_t buffer;
+        rob_main_buffer_t main_buffer;
+        rob_resolver_buffer_t resolver_buffer;
         RegisterFile &register_file;
 
     public:

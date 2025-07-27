@@ -287,6 +287,11 @@ namespace norb {
                 return _physical_idx;
             }
 
+            template <typename Q>
+            auto that_of(FixedBufferedQueue<Q, Capacity> *other) const {
+                return typename FixedBufferedQueue<Q, Capacity>::base_iterator<IsConst>(other, _physical_idx);
+            }
+
             base_iterator& operator++() {
                 _physical_idx = (_physical_idx + 1) % InternalCapacity;
                 return *this;
@@ -341,6 +346,7 @@ namespace norb {
 
         private:
             friend class FixedBufferedQueue<T, Capacity>;
+            template<typename, size_t> friend class FixedBufferedQueue;
             base_iterator(container_type* queue, size_type physical_idx) noexcept :
                 _queue(queue), _physical_idx(physical_idx) {}
 
