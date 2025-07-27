@@ -8,8 +8,10 @@
 namespace norb::riscv::constants {
     inline constexpr int register_file_size = 32;
     inline constexpr int reorder_buffer_size = 64;
-    inline constexpr int reservation_station_size = 32;
     inline constexpr int memory_size = 4096;
+
+    inline constexpr int reservation_station_size = 32;
+    inline constexpr int load_store_buffer_size = 32;
 
     inline constexpr int alu_calc_delay = 1;
     inline constexpr int mem_access_delay = 3;

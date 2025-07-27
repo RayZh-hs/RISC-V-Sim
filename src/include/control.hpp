@@ -5,15 +5,14 @@
 
 #include <iostream>
 
-#include "alu.hpp"
 #include "ba.hpp"
 #include "cdb.hpp"
 #include "decoder.hpp"
-#include "mem.hpp"
 #include "pc.hpp"
 #include "reg.hpp"
 #include "rob.hpp"
 #include "rs.hpp"
+#include "lsb.hpp"
 #include "third_party/logger.hpp"
 #include "utility/bus.hpp"
 #include "utility/chan.hpp"

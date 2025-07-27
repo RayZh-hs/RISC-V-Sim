@@ -5,7 +5,7 @@
 
 #include <alu.hpp>
 
-#include "cdr.hpp"
+#include "dep.hpp"
 #include "rob.hpp"  // For rob_pointer_t and related types
 #include "utility/bus.hpp"
 #include "utility/constants.hpp"
@@ -16,7 +16,7 @@ namespace C = norb::riscv::constants;
 namespace norb::riscv {
     class ReservationStation {
     public:
-        CommonDependencyResolver<C::reservation_station_size> resolver;
+        RandomDependencyResolver<C::reservation_station_size> resolver;
         Delayer<ResolvedInstructionEntry, C::alu_calc_delay, C::reservation_station_size> delayer;
         ArithmeticLogicUnit alu;
         TemporarilyBuffered<uint32_t> ans;

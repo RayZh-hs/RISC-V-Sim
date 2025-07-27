@@ -4,6 +4,7 @@
 #pragma once
 
 #include <array>
+#include <dep.hpp>
 #include <fstream>
 #include <sstream>
 
@@ -56,13 +57,13 @@ namespace norb::riscv {
                 }
             }
         }
-    }  // namespace templating
+    }  // namespace impl
 
     class Memory {
         std::array<C::b_uint8_t, C::memory_size> memory;
 
     public:
-        Memory(const std::string& path) {
+        explicit Memory(const std::string& path) {
             std::ifstream file(path);
             impl::memory_decode(memory, file);
         }
@@ -78,25 +79,4 @@ namespace norb::riscv {
         }
     };
 
-    struct LoadStoreBufferEntry {
-        uint32_t address;
-    };
-
-    // Load Store Buffer
-    class LoadStoreBuffer {
-    private:
-        std::unique_ptr<Memory> memory;
-
-    public:
-        void load_memory(const std::string& mem_path) {
-            memory = std::make_unique<Memory>(mem_path);
-        }
-
-        uint32_t get_instruction(uint32_t index) const {
-            if (!memory) {
-                throw std::runtime_error("Memory not loaded.");
-            }
-            return memory->read(index);
-        }
-    };
 }  // namespace norb::riscv

@@ -11,7 +11,6 @@ namespace norb::riscv {
     
     // Forward declarations to avoid circular dependencies
     struct ROBEntry;
-    template<typename T, size_t N> class FixedBufferedQueue;
 
     struct BroadcastEntry {
         rob_pointer_t rob_pointer;
