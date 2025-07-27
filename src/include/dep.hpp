@@ -31,6 +31,7 @@ namespace norb::riscv {
         virtual void listen_broadcast() = 0;
         virtual std::optional<ResolvedInstructionEntry> get_ready_entry() = 0;
         virtual void submit_executed_entry(rob_pointer_t rob_pointer, uint32_t value) = 0;
+        virtual void clear() = 0;  // Add clear method
         virtual ~DependencyResolver() = default;
     };
 
@@ -139,6 +140,15 @@ namespace norb::riscv {
                 }
             }
         }
+
+        void clear() override {
+            // Clear all entries in the buffer by setting them to EMPTY
+            for (int i = 0; i < Capacity; ++i) {
+                auto ent = buffer.read_at(i);
+                ent.status = ResolverEntryStatus::EMPTY;
+                buffer.write_at(i, ent);
+            }
+        }
     };
 
     // A Sequential Dependency Resolver (SDR) is responsible for managing dependencies
@@ -240,6 +250,11 @@ namespace norb::riscv {
                     return;
                 }
             }
+        }
+
+        void clear() override {
+            // Clear the buffer queue
+            buffer.clear();
         }
     };
 }  // namespace norb::riscv

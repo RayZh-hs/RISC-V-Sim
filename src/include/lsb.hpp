@@ -7,10 +7,11 @@
 #include <utility/delayer.hpp>
 
 #include "mem.hpp"
+#include "reset.hpp"
 
 namespace norb::riscv {
     // Load Store Buffer
-    class LoadStoreBuffer {
+    class LoadStoreBuffer : public Resettable {
     private:
         Delayer<ResolvedInstructionEntry, C::mem_access_delay, C::load_store_buffer_size> delayer;
         std::unique_ptr<Memory> memory = nullptr;
@@ -41,5 +42,8 @@ namespace norb::riscv {
         void on_broadcast();
 
         void on_commit();
+        
+        // Implement Resettable interface
+        void on_reset(const ResetData& reset_data) override;
     };
 }  // namespace norb::riscv

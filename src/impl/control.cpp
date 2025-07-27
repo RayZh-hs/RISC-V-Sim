@@ -2,13 +2,15 @@
 // - implements entrypoint-level control functions for the entire risc-v system
 
 #include "control.hpp"
+
 #include "third_party/logger.hpp"
 #include "utility/clock.hpp"
 
 namespace norb::riscv {
 
-    void RISCV_Simulator::connect_buses() { 
+    void RISCV_Simulator::connect_buses() {
         bus_rob_has_committed_exit.connect(rob.bus_rob_has_committed_exit);
+        bus_rst.connect(rob.bus_rst);
         lsb.set_commit_bus(bus_con_commit);
     }
 
@@ -41,7 +43,7 @@ namespace norb::riscv {
             // it should return pc + 4 if ins is not a branch instruction
             const auto predicted_pc = ba.predict_pc(pc.read(), ins);
             pc.write(predicted_pc);
-            ins.had_jumped = (predicted_pc != pc.read() + 4);   // if imm == 4 this cannot be wrongly predicted
+            ins.had_jumped = (predicted_pc != pc.read() + 4);  // if imm == 4 this cannot be wrongly predicted
             ins.pc = pc.read();
             // now the instruction forwarded to the BA by ROB will have been tagged to ensure correct rollback
             chan_con_rob_next_instruction.write(ins);
@@ -82,9 +84,38 @@ namespace norb::riscv {
         Clock::instance().tick();
     }
 
-    bool RISCV_Simulator::check_for_exit() const { 
-        return bus_rob_has_committed_exit.read(); 
+    void RISCV_Simulator::check_reset() {
+        // Check for reset signal from ROB
+        auto reset_data = bus_rst.read();
+        if (reset_data.has_value() && reset_data->reset_signal) {
+            auto &log = Logger::get();
+            log.as(LogLevel::INFO) << "[CONTROL] Reset detected, flushing pipeline and setting PC to: "
+                                   << reset_data->new_pc;
+
+            // Reset all units
+            pc.on_reset(reset_data.value());
+            reg.on_reset(reset_data.value());
+            rob.on_reset(reset_data.value());
+            rs.on_reset(reset_data.value());
+            lsb.on_reset(reset_data.value());
+            ba.on_reset(reset_data.value());
+
+            // Clear the common data bus
+            cdb.clear();
+
+            // Clear bus states
+            bus_rst.clear();
+            bus_rob_has_committed_exit.clear();
+            bus_con_commit.clear();
+
+            // Clear channel states by manually flushing
+            // This ensures clean state after reset
+
+            log.as(LogLevel::INFO) << "[CONTROL] Reset completed, system ready";
+        }
     }
+
+    bool RISCV_Simulator::check_for_exit() const { return bus_rob_has_committed_exit.read(); }
 
     void RISCV_Simulator::boot(const std::string &mem_path) {
         Clock::instance().reset();
@@ -105,6 +136,10 @@ namespace norb::riscv {
 
             // tidy() must be called last (falling edge)
             tidy();
+
+            // check for reset signal on falling edge
+            check_reset();
+
             // check for the termination channel
             if (check_for_exit()) {
                 break;

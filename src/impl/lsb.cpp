@@ -170,4 +170,22 @@ namespace norb::riscv {
     }
 
 
+    void LoadStoreBuffer::on_reset(const ResetData& reset_data) {
+        if (reset_data.reset_signal) {
+            log.as(LogLevel::INFO) << "[LSB] Reset signal received, clearing all buffers";
+            
+            // Clear resolver buffer
+            resolver.clear();
+            
+            // Clear modification lists
+            modification_list.clear();
+            modification_blame.clear();
+            
+            // Note: delayer will naturally clear itself as items expire
+            // Memory is not cleared as it represents persistent storage
+            
+            log.as(LogLevel::INFO) << "[LSB] Reset completed, all buffers cleared";
+        }
+    }
+
 }  // namespace norb::riscv

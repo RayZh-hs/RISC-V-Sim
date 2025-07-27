@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "reset.hpp"
 #include "rob_types.hpp"  // For rob_pointer_t
 #include "utility/constants.hpp"
 
@@ -24,7 +25,7 @@ namespace norb::riscv {
         Register();
     };
 
-    class RegisterFile {
+    class RegisterFile : public Resettable {
         Register registers[C::register_file_size];
 
     public:
@@ -32,6 +33,9 @@ namespace norb::riscv {
         [[nodiscard]] uint32_t read(int index) const;
         void write(int index, uint32_t value);
         void write_host(int index, const rob_pointer_t &host);
+        
+        // Implement Resettable interface
+        void on_reset(const ResetData& reset_data) override;
     };
 
 }  // namespace norb::riscv

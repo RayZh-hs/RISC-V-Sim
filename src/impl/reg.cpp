@@ -40,4 +40,17 @@ namespace norb::riscv {
         registers[index].has_host.write(true);
     }
 
+    void RegisterFile::on_reset(const ResetData& reset_data) {
+        if (reset_data.reset_signal) {
+            // Clear all host dependencies and reset all registers to 0
+            for (int i = 0; i < C::register_file_size; ++i) {
+                registers[i].value.write(0);
+                registers[i].has_host.write(false);
+                if (i != 0) {  // Don't reset the host for x0 register
+                    registers[i].host.write(rob_pointer_t{});
+                }
+            }
+        }
+    }
+
 }  // namespace norb::riscv

@@ -6,6 +6,7 @@
 #include <third_party/logger.hpp>
 
 #include "cdb.hpp"
+#include "reset.hpp"
 #include "rob_types.hpp"
 #include "utility/bus.hpp"
 #include "utility/chan.hpp"
@@ -16,7 +17,7 @@ namespace C = norb::riscv::constants;
 namespace norb::riscv {
     class RegisterFile;  // Forward declaration
 
-    class ReOrderBuffer {
+    class ReOrderBuffer : public Resettable {
     public:
         // Communication buses
         // - control unit
@@ -31,6 +32,8 @@ namespace norb::riscv {
         
         // - load store buffer
         TemporaryBus<rob_pointer_t> bus_con_commit;
+        // - reset bus
+        TemporaryBus<ResetData> bus_rst;
 
     private:
         rob_main_buffer_t main_buffer;
@@ -53,5 +56,8 @@ namespace norb::riscv {
         void on_issue();
         void on_broadcast();
         void on_commit();
+        
+        // Implement Resettable interface
+        void on_reset(const ResetData& reset_data) override;
     };
 }  // namespace norb::riscv

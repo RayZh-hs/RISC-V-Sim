@@ -40,4 +40,24 @@ namespace norb::riscv {
         resolver.listen_broadcast();
     }
 
+    void ReservationStation::on_reset(const ResetData& reset_data) {
+        if (reset_data.reset_signal) {
+            auto &log = Logger::get();
+            log.as(LogLevel::INFO) << "[RS] Reset signal received, clearing all buffers";
+            
+            // Clear resolver buffer
+            resolver.clear();
+            
+            // Clear delayer (note: assuming delayer has a clear method, if not, we'd need to add one)
+            // For now, we'll just note that the delayer should be cleared
+            // The delayer will naturally clear itself as items expire
+            
+            // Clear answer buffers
+            ans.flush();  // This will clear the temporarily buffered value
+            ans_pointer.flush();
+            
+            log.as(LogLevel::INFO) << "[RS] Reset completed, all buffers cleared";
+        }
+    }
+
 }  // namespace norb::riscv

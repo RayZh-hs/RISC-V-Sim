@@ -8,11 +8,12 @@
 #include "ba.hpp"
 #include "cdb.hpp"
 #include "decoder.hpp"
+#include "lsb.hpp"
 #include "pc.hpp"
 #include "reg.hpp"
+#include "reset.hpp"
 #include "rob.hpp"
 #include "rs.hpp"
-#include "lsb.hpp"
 #include "third_party/logger.hpp"
 #include "utility/bus.hpp"
 #include "utility/chan.hpp"
@@ -30,6 +31,7 @@ namespace norb::riscv {
 
         Bus<bool> bus_rob_has_committed_exit;
         TemporaryBus<rob_pointer_t> bus_con_commit;
+        TemporaryBus<ResetData> bus_rst;
         ChannelWriter<Instruction> chan_con_rob_next_instruction;
 
         // Connects the buses between all components (hardware linking)
@@ -44,6 +46,7 @@ namespace norb::riscv {
         void commit();
 
         void tidy();
+        void check_reset();  // Check for reset signal and handle reset
         [[nodiscard]] bool check_for_exit() const;
 
     public:

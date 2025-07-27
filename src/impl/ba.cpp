@@ -96,4 +96,18 @@ namespace norb::riscv {
         }
     }
 
+    void BranchAnalyzer::on_reset(const ResetData& reset_data) {
+        if (reset_data.reset_signal) {
+            logger.as(LogLevel::INFO) << "[BA] Reset signal received, clearing all buffers";
+            
+            // Clear resolver buffer
+            resolver.clear();
+            
+            // Reset branch predictor to default state
+            predictor.state.write(BranchPredictor::State::W_NJMP);
+            
+            logger.as(LogLevel::INFO) << "[BA] Reset completed, all buffers cleared";
+        }
+    }
+
 }  // namespace norb::riscv

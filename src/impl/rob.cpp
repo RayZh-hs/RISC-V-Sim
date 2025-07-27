@@ -189,16 +189,13 @@ namespace norb::riscv {
 
             case InsPos::BRANCH:
                 // Check if this was a wrong branch
+                // If correct, then nothing needs be done
                 if (not result == C::correct_branch_token) {
-                    log.as(LogLevel::INFO) << "[ROB] Branch mis-prediction detected, flushing pipeline";
+                    log.as(LogLevel::WARN) << "[ROB] Branch mis-prediction detected, flushing pipeline";
                     // Clear all entries after this one in ROB
-                    // todo Write the correct pc into the rst channel to trigger rollback
-                } else {
-                    // For JAL/JALR, write return address to register
-                    if ((ins.header.ins_type == JAL || ins.header.ins_type == JALR) && ins.rd != 0) {
-                        register_file.write(ins.rd, ins.pc + 4);
-                        register_file.write_host(ins.rd, rob_nullptr);
-                    }
+                    // Write the correct pc into the rst bus to trigger rollback
+                    uint32_t correct_pc = front.result;
+                    bus_rst.write(ResetData(true, correct_pc));
                 }
                 break;
 
@@ -218,6 +215,26 @@ namespace norb::riscv {
         resolver_buffer.pop();
 
         log.as(LogLevel::INFO) << "[ROB] Successfully committed instruction: " << ins;
+    }
+
+    void ReOrderBuffer::on_reset(const ResetData &reset_data) {
+        if (reset_data.reset_signal) {
+            auto &log = Logger::get();
+            log.as(LogLevel::INFO) << "[ROB] Reset signal received, clearing all buffers";
+
+            // Clear main buffer
+            main_buffer.clear();
+
+            // Clear resolver buffer
+            resolver_buffer.clear();
+
+            // Clear all host dependencies in register file
+            for (int i = 1; i < C::register_file_size; ++i) {  // Skip x0 register
+                register_file.write_host(i, rob_nullptr);
+            }
+
+            log.as(LogLevel::INFO) << "[ROB] Reset completed, all buffers cleared";
+        }
     }
 
 }  // namespace norb::riscv

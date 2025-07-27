@@ -6,6 +6,7 @@
 #include <alu.hpp>
 
 #include "dep.hpp"
+#include "reset.hpp"
 #include "rob_types.hpp"  // For rob_pointer_t and related types
 #include "utility/bus.hpp"
 #include "utility/constants.hpp"
@@ -14,7 +15,7 @@
 namespace C = norb::riscv::constants;
 
 namespace norb::riscv {
-    class ReservationStation {
+    class ReservationStation : public Resettable {
     public:
         RandomDependencyResolver<C::reservation_station_size> resolver;
         Delayer<ResolvedInstructionEntry, C::alu_calc_delay, C::reservation_station_size> delayer;
@@ -25,5 +26,8 @@ namespace norb::riscv {
         void on_issue();
         void on_execute();
         void on_broadcast();
+        
+        // Implement Resettable interface
+        void on_reset(const ResetData& reset_data) override;
     };
 }  // namespace norb::riscv

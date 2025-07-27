@@ -5,11 +5,12 @@
 
 #include "decoder.hpp"
 #include "dep.hpp"
+#include "reset.hpp"
 #include "third_party/logger.hpp"
 
 namespace norb::riscv {
 
-    class BranchAnalyzer {
+    class BranchAnalyzer : public Resettable {
         Logger &logger = Logger::get();
 
         [[nodiscard]] bool should_jump(const ResolvedInstructionEntry &entry) const;
@@ -19,6 +20,7 @@ namespace norb::riscv {
         SequentialDependencyResolver<C::branch_analyzer_size> resolver;
 
         class BranchPredictor {
+        public:
             enum class State { S_JMP, W_JMP, W_NJMP, S_NJMP };
             Buffered<State> state{State::W_NJMP};
 
@@ -33,5 +35,8 @@ namespace norb::riscv {
         [[nodiscard]] uint32_t predict_pc(uint32_t pc, const Instruction &ins) const;
         void on_issue();
         void on_broadcast();
+        
+        // Implement Resettable interface
+        void on_reset(const ResetData& reset_data) override;
     };
 }  // namespace norb::riscv

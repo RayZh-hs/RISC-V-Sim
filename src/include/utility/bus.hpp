@@ -27,6 +27,8 @@ namespace norb {
         void write(const T& value) { buffered_->write(value); }
 
         T read() const { return buffered_->read(); }
+
+        void clear() { buffered_->flush(); }
     };
 
     // TemporaryBus class manages connections between components using TemporarilyBuffered values to mimic latches.
@@ -47,5 +49,7 @@ namespace norb {
         void write(const T& value) { buffered_->write(value); }
 
         std::optional<T> read() const { return buffered_->read(); }
+
+        void clear() { buffered_->flush(); }
     };
 }  // namespace norb

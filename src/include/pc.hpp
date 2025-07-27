@@ -3,13 +3,14 @@
 
 #pragma once
 
+#include "reset.hpp"
 #include "utility/constants.hpp"
 #include <cstdint>
 namespace C = norb::riscv::constants;
 
 namespace norb::riscv
 {
-    class ProgramCounter {
+    class ProgramCounter : public Resettable {
         C::b_uint32_t val;
 
     public:
@@ -32,6 +33,13 @@ namespace norb::riscv
 
         void add(uint32_t offset = 4) {
             val.write(val.read() + offset);
+        }
+
+        // Implement Resettable interface
+        void on_reset(const ResetData& reset_data) override {
+            if (reset_data.reset_signal) {
+                val.write(reset_data.new_pc);
+            }
         }
     };
 } // namespace norb::riscv
