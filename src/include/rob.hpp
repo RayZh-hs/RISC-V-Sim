@@ -115,6 +115,6 @@ namespace norb::riscv {
         [[nodiscard]] bool empty() const;
 
         void instruction_fetch();
-        void issue();
+        void on_issue();
     };
 }  // namespace norb::riscv

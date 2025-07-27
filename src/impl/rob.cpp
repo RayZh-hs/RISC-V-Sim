@@ -70,7 +70,7 @@ namespace norb::riscv {
         }
     }
 
-    void ReOrderBuffer::issue() {
+    void ReOrderBuffer::on_issue() {
         auto &log = Logger::get();
         // get the first entry that is ready
         for (auto it = main_buffer.begin(); it != main_buffer.end(); ++it) {

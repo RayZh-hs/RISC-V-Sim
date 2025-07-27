@@ -48,7 +48,7 @@ namespace norb::riscv {
 
     void RISCV_Simulator::issue() {
         // Issue instructions from the ReOrder Buffer to the Reservation Station and Load-Store Buffer
-        rob.issue();
+        rob.on_issue();
         rs.on_issue();
         lsb.on_issue();
         ba.on_issue();
