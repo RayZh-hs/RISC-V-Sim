@@ -13,7 +13,7 @@ namespace C = norb::riscv::constants;
 namespace norb::riscv {
 
     // ROB types
-    enum class ROBEntryStatus { EMPTY, READY, ISSUED, COMMITTED };
+    enum class ROBEntryStatus { EMPTY, READY, ISSUED, COMPUTED };
 
     struct ROBEntry {
         Instruction instruction;

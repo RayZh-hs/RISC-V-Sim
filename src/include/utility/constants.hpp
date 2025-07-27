@@ -2,8 +2,9 @@
 // - defines and holds all compile-time constants in the project and provides standard type definitions
 
 #pragma once
-#include "buffered.hpp"
 #include <cstdint>
+
+#include "buffered.hpp"
 
 namespace norb::riscv::constants {
     inline constexpr int register_file_size = 32;
@@ -14,7 +15,7 @@ namespace norb::riscv::constants {
     inline constexpr int load_store_buffer_size = 32;
     inline constexpr int branch_analyzer_size = 32;
 
-    inline constexpr uint32_t wrong_branch_token = -1;
+    inline constexpr uint32_t correct_branch_token = -1;
 
     inline constexpr int alu_calc_delay = 1;
     inline constexpr int mem_access_delay = 3;
@@ -26,4 +27,4 @@ namespace norb::riscv::constants {
     // project-specific typedef
     using robId_t = uint8_t;
     using b_robId_t = Buffered<robId_t>;
-}
+}  // namespace norb::riscv::constants

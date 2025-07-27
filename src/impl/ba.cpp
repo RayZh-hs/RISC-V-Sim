@@ -90,7 +90,7 @@ namespace norb::riscv {
                                       << ", real_jump=" << real_jump << ", had_jumped=" << had_jumped << ")";
 
             const uint32_t ret =
-                (real_jump == had_jumped) ? C::wrong_branch_token : calc_pc(to_broadcast->pc, to_broadcast.value());
+                (real_jump == had_jumped) ? C::correct_branch_token : calc_pc(to_broadcast->pc, to_broadcast.value());
             // broadcast the ret
             resolver.submit_executed_entry(to_broadcast->rob_pointer, ret);
         }
