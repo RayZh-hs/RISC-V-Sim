@@ -1,6 +1,7 @@
 // loaned_types.cpp
 // - implements ROB and types loaned from CDR (templating issues)
 
+#include "rob_types.hpp"
 #include "rob.hpp"
 #include "decoder.hpp"
 

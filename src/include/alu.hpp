@@ -4,7 +4,7 @@
 #pragma once
 
 #include "utility/constants.hpp"
-#include "rob.hpp"  // For ResolvedInstructionEntry
+#include "rob_types.hpp"  // For ResolvedInstructionEntry
 
 namespace norb::riscv {
     class ArithmeticLogicUnit {

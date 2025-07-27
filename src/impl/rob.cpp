@@ -110,4 +110,8 @@ namespace norb::riscv {
         log.as(LogLevel::DEBUG) << "[ROB] No instruction issuable";
     }
 
+    void ReOrderBuffer::on_commit() {
+
+    }
+
 }  // namespace norb::riscv

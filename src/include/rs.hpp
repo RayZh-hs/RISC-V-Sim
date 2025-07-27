@@ -6,7 +6,7 @@
 #include <alu.hpp>
 
 #include "dep.hpp"
-#include "rob.hpp"  // For rob_pointer_t and related types
+#include "rob_types.hpp"  // For rob_pointer_t and related types
 #include "utility/bus.hpp"
 #include "utility/constants.hpp"
 #include "utility/delayer.hpp"

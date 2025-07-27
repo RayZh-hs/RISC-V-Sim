@@ -7,7 +7,7 @@
 #include <optional>
 
 #include "cdb.hpp"
-#include "rob.hpp"  // For ResolverEntry and related types
+#include "rob_types.hpp"  // For ResolverEntry and related types
 #include "third_party/array.hpp"
 #include "third_party/logger.hpp"
 #include "third_party/queue.hpp"
@@ -40,18 +40,21 @@ namespace norb::riscv {
     template <int Capacity>
     class RandomDependencyResolver : public DependencyResolver<Capacity> {
         BufferedArray<ResolverEntry, Capacity> buffer;
-        std::unique_ptr<CommonDataBus> cdb_ref;
+        std::shared_ptr<CommonDataBus> cdb_ref;
         ChannelReader<ResolverEntry> chan_inbound{};
 
     public:
-        void bind_inbound_to(norb::ChannelWriter<ResolverEntry> &chw) { make_channel(chw, chan_inbound); }
+        void bind_inbound_to(norb::ChannelWriter<ResolverEntry> &chw) override { make_channel(chw, chan_inbound); }
+        void load_cdb(CommonDataBus &cdb) {
+            cdb_ref = std::make_shared<CommonDataBus>(cdb);
+        }
 
         [[nodiscard]] bool full() const {
             return buffer.find_if(
                        [](const ResolverEntry &entry) { return entry.status == ResolverEntryStatus::EMPTY; }) == -1;
         }
 
-        void listen_inbound() {
+        void listen_inbound() override {
             auto &log = Logger::get();
             if (chan_inbound.has_data()) {
                 log.as(LogLevel::DEBUG) << "[RDR] Acquired new data";
@@ -68,7 +71,7 @@ namespace norb::riscv {
             }
         }
 
-        void listen_broadcast() {
+        void listen_broadcast() override {
             auto &log = Logger::get();
             if (cdb_ref->empty()) return;
             auto news = cdb_ref->read();
@@ -102,7 +105,7 @@ namespace norb::riscv {
             }
         }
 
-        std::optional<ResolvedInstructionEntry> get_ready_entry() {
+        std::optional<ResolvedInstructionEntry> get_ready_entry() override {
             auto &log = Logger::get();
             const auto ind =
                 buffer.find_if([](const ResolverEntry &entry) { return entry.status == ResolverEntryStatus::READY; });
@@ -120,7 +123,7 @@ namespace norb::riscv {
             }
         }
 
-        void submit_executed_entry(rob_pointer_t rob_pointer, uint32_t value) {
+        void submit_executed_entry(rob_pointer_t rob_pointer, uint32_t value) override {
             auto &log = Logger::get();
             // search the database for the rob_pointer
             for (int i = 0; i < Capacity; ++i) {
@@ -143,11 +146,14 @@ namespace norb::riscv {
     template <int Capacity>
     class SequentialDependencyResolver : public DependencyResolver<Capacity> {
         FixedBufferedQueue<ResolverEntry, Capacity> buffer;
-        std::unique_ptr<CommonDataBus> cdb_ref;
+        std::shared_ptr<CommonDataBus> cdb_ref;
         ChannelReader<ResolverEntry> chan_inbound{};
 
     public:
         void bind_inbound_to(norb::ChannelWriter<ResolverEntry> &chw) override { make_channel(chw, chan_inbound); }
+        void load_cdb(CommonDataBus &cdb) {
+            cdb_ref = std::make_shared<CommonDataBus>(cdb);
+        }
 
         [[nodiscard]] bool full() const override { return buffer.full(); }
 

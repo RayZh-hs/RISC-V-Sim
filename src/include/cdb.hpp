@@ -5,12 +5,9 @@
 
 #include <queue>
 #include <cstdint>
-#include "rob.hpp"
+#include "rob_types.hpp"
 
 namespace norb::riscv {
-    
-    // Forward declarations to avoid circular dependencies
-    struct ROBEntry;
 
     struct BroadcastEntry {
         rob_pointer_t rob_pointer;

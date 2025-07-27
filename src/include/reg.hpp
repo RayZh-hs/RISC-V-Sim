@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "rob.hpp"  // For rob_pointer_t
+#include "rob_types.hpp"  // For rob_pointer_t
 #include "utility/constants.hpp"
 
 namespace C = norb::riscv::constants;

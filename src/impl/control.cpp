@@ -17,6 +17,9 @@ namespace norb::riscv {
         rs.resolver.bind_inbound_to(rob.chan_rob_rs_next_instruction);
         lsb.resolver.bind_inbound_to(rob.chan_rob_lsb_next_instruction);
         ba.resolver.bind_inbound_to(rob.chan_rob_ba_next_instruction);
+        rs.resolver.load_cdb(cdb);
+        lsb.resolver.load_cdb(cdb);
+        ba.resolver.load_cdb(cdb);
     }
 
     void RISCV_Simulator::print_result() const {
@@ -66,6 +69,7 @@ namespace norb::riscv {
     }
 
     void RISCV_Simulator::commit() {
+        rob.on_commit();
         lsb.on_commit();
     }
 
