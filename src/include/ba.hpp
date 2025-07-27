@@ -20,10 +20,12 @@ namespace norb::riscv {
 
         class BranchPredictor {
             enum class State { S_JMP, W_JMP, W_NJMP, S_NJMP };
-            State state = State::W_NJMP;
+            Buffered<State> state{State::W_NJMP};
 
         public:
             [[nodiscard]] bool predict_should_jump() const;
+
+            void move_state(const bool &do_jump);
         };
 
         BranchPredictor predictor;

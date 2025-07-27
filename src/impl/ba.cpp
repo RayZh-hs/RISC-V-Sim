@@ -45,10 +45,22 @@ namespace norb::riscv {
     }
 
     bool BranchAnalyzer::BranchPredictor::predict_should_jump() const {
-        if (state == State::S_JMP || state == State::W_JMP) {
+        if (state.read() == State::S_JMP || state.read() == State::W_JMP) {
             return true;
         }
         return false;
+    }
+
+    void BranchAnalyzer::BranchPredictor::move_state(const bool &do_jump) {
+        if (do_jump) {
+            if (state.read() != State::S_JMP) {
+                state = static_cast<State>(static_cast<int>(state.read()) - 1);  // Move towards S_JMP
+            }
+        } else {
+            if (state.read() != State::S_NJMP) {
+                state = static_cast<State>(static_cast<int>(state.read()) + 1);  // Move towards S_NJMP
+            }
+        }
     }
 
     uint32_t BranchAnalyzer::predict_pc(uint32_t pc, const Instruction &ins) const {
@@ -72,9 +84,11 @@ namespace norb::riscv {
         if (to_broadcast.has_value()) {
             const bool real_jump = should_jump(to_broadcast.value());
             const bool had_jumped = to_broadcast->had_jumped;
+            predictor.move_state(real_jump);  // update the predictor state
             logger.as(LogLevel::INFO) << "[BA] Resolved jump: Jump(pc=" << to_broadcast->pc
                                       << ", type=" << ins_type_names[static_cast<int>(to_broadcast->type)]
                                       << ", real_jump=" << real_jump << ", had_jumped=" << had_jumped << ")";
+
             const uint32_t ret =
                 (real_jump == had_jumped) ? C::wrong_branch_token : calc_pc(to_broadcast->pc, to_broadcast.value());
             // broadcast the ret
