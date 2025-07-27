@@ -3,6 +3,10 @@
 
 #pragma once
 
+#include <array>
+#include <fstream>
+#include <sstream>
+
 #include "utility/constants.hpp"
 
 namespace C = norb::riscv::constants;
@@ -52,7 +56,7 @@ namespace norb::riscv {
                 }
             }
         }
-    }  // namespace impl
+    }  // namespace templating
 
     class Memory {
         std::array<C::b_uint8_t, C::memory_size> memory;

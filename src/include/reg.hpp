@@ -1,42 +1,37 @@
 // reg.hpp
-// - implements the register file
+// - declares the register file
 
 #pragma once
 
-#include "define/reg.hpp"
+#include "rob.hpp"  // For rob_pointer_t
+#include "utility/constants.hpp"
+
+namespace C = norb::riscv::constants;
 
 namespace norb::riscv {
+    
+    enum RegName {
+        ZERO = 0,  // Zero register
+        RA = 1,  // Return address
+        A0 = 10,  // Argument 0
+    };
 
-    inline std::optional<rob_pointer_t> RegisterFile::read_host(int index) const {
-        if (index < 0 or index >= C::register_file_size) {
-            throw std::out_of_range("RegisterFile::read_host out of range");
-        }
-        if (index == 0) {
-            return std::nullopt;
-        }
-        if (registers[index].has_host.read()) {
-            return registers[index].host.read();
-        }
-        return std::nullopt;
-    }
+    struct Register {
+        C::b_uint32_t value;
+        Buffered<rob_pointer_t> host;
+        Buffered<bool> has_host;
 
-    inline uint32_t RegisterFile::read(int index) const {
-        return registers[index].value.read();
-    }
+        Register();
+    };
 
-    inline void RegisterFile::write(int index, uint32_t value) {
-        registers[index].value.write(value);
-    }
+    class RegisterFile {
+        Register registers[C::register_file_size];
 
-    inline void RegisterFile::write_host(int index, const rob_pointer_t &host) {
-        if (index < 0 or index >= C::register_file_size) {
-            throw std::out_of_range("RegisterFile::write_host out of range");
-        }
-        if (index == 0) {
-            return;  // Zero register does not have a host
-        }
-        registers[index].host.write(host);
-        registers[index].has_host.write(true);
-    }
+    public:
+        [[nodiscard]] std::optional<rob_pointer_t> read_host(int index) const;
+        [[nodiscard]] uint32_t read(int index) const;
+        void write(int index, uint32_t value);
+        void write_host(int index, const rob_pointer_t &host);
+    };
 
 }  // namespace norb::riscv

@@ -41,7 +41,7 @@ namespace norb {
     }
 
     // Convert LogLevel to a string
-    const char* levelToString(LogLevel level) {
+    inline const char* levelToString(LogLevel level) {
         switch (level) {
             case LogLevel::DEBUG: return "DEBUG";
             case LogLevel::INFO:  return "INFO ";
@@ -53,7 +53,7 @@ namespace norb {
     }
 
     // Get the color for a specific log level
-    const char* levelToColor(LogLevel level) {
+    inline const char* levelToColor(LogLevel level) {
         switch (level) {
             case LogLevel::DEBUG: return Color::BLUE;
             case LogLevel::INFO:  return Color::GREEN;

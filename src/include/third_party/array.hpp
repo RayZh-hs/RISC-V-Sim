@@ -20,7 +20,7 @@ namespace norb {
 
         ~BufferedArray() override { impl::BufferedManager::remove(this); }
 
-        T read_at(const size_t pos) {
+        T read_at(const size_t &pos) {
             if (pos >= Capacity) {
                 throw std::runtime_error("BufferedArray::read_at: pos >= Capacity");
             }

@@ -21,7 +21,7 @@ namespace norb::riscv
             val = 0;
         }
 
-        u_int32_t read() const {
+        [[nodiscard]] u_int32_t read() const {
             return val.read();
         }
 

@@ -37,7 +37,7 @@ namespace norb {
             const auto now = Clock::instance().now();
             for (int i = 0; i < Capacity; i++) {
                 if (occupied.read_at(i)) {
-                    auto& [time, val] = buffer.read_at(i);
+                    auto [time, val] = buffer.read_at(i);
                     assert(now > time);
                     if (now >= time + Delay) {
                         // this is the entry to pop

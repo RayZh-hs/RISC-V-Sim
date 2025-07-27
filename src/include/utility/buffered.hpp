@@ -62,7 +62,7 @@ namespace norb {
             }
         };
 
-    }  // namespace impl
+    }  // namespace templating
 
     // A utility class that ensures lock() is only called once per cycle
     class Lock : public impl::BufferedFlushInterface_ {

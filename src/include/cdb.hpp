@@ -4,39 +4,37 @@
 #pragma once
 
 #include <queue>
-
-#include "define/cdb.hpp"
+#include <cstdint>
+#include "rob.hpp"
 
 namespace norb::riscv {
+    
+    // Forward declarations to avoid circular dependencies
+    struct ROBEntry;
+    template<typename T, size_t N> class FixedBufferedQueue;
+
+    struct BroadcastEntry {
+        rob_pointer_t rob_pointer;
+        uint32_t value{};
+
+        BroadcastEntry(rob_pointer_t rob_pointer, uint32_t value);
+        BroadcastEntry() = default;
+    };
+
     // This is the only system in the RISC-V simulator that does not follow strict latch logic
     // It is designed so for simpler interface and to let multiple dataflows through
     class CommonDataBus {
-        std::queue<BroadcastEntry> broadcast_queue_;
+        std::queue<BroadcastEntry> broadcast_queue_{};
 
     public:
         CommonDataBus() = default;
 
-        void broadcast(const BroadcastEntry& entry) {
-            broadcast_queue_.push(entry);
-        }
-
-        [[nodiscard]] bool empty() const {
-            return broadcast_queue_.empty();
-        }
-
-        [[nodiscard]] BroadcastEntry read() const {
-            return broadcast_queue_.front();
-        }
+        void broadcast(const BroadcastEntry& entry);
+        [[nodiscard]] bool empty() const;
+        [[nodiscard]] BroadcastEntry read() const;
 
         // This method is called on falling edge
-        void flush() {
-            broadcast_queue_.pop();
-        }
-
-        void clear() {
-            while (not broadcast_queue_.empty()) {
-                broadcast_queue_.pop();
-            }
-        }
+        void flush();
+        void clear();
     };
 }  // namespace norb::riscv
