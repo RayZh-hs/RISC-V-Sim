@@ -5,6 +5,7 @@
 
 #include <memory>
 #include <optional>
+#include <utility>
 
 #include "cdb.hpp"
 #include "rob_types.hpp"  // For ResolverEntry and related types
@@ -46,8 +47,8 @@ namespace norb::riscv {
 
     public:
         void bind_inbound_to(norb::ChannelWriter<ResolverEntry> &chw) override { make_channel(chw, chan_inbound); }
-        void load_cdb(CommonDataBus &cdb) {
-            cdb_ref = std::make_shared<CommonDataBus>(cdb);
+        void load_cdb(std::shared_ptr<CommonDataBus> cdb) {
+            cdb_ref = std::move(cdb);
         }
 
         [[nodiscard]] bool full() const {
@@ -81,12 +82,14 @@ namespace norb::riscv {
             for (int i = 0; i < Capacity; ++i) {
                 auto ent = buffer.read_at(i);
                 if (ent.status == ResolverEntryStatus::PENDING) {
+                    bool do_write = false;  // theoretically we don't need this (writing all will not violate any rule)
                     if (ent.qk == news.rob_pointer and not ent.k_is_ready) {
                         log.as(LogLevel::DEBUG)
                             << "[RDR] Resolving entry at index " << i << " with qk=" << ent.qk.repr()
                             << " | target entry rob=" << ent.rob_pointer.repr();
                         ent.k_is_ready = true;
                         ent.vk = news.value;
+                        do_write = true;
                     }
                     if (ent.qj == news.rob_pointer and not ent.j_is_ready) {
                         log.as(LogLevel::DEBUG)
@@ -94,15 +97,18 @@ namespace norb::riscv {
                             << " | target entry rob=" << ent.rob_pointer.repr();
                         ent.j_is_ready = true;
                         ent.vj = news.value;
+                        do_write = true;
                     }
-                    if (ent.k_is_ready and ent.j_is_ready) {
+                    if (do_write and ent.k_is_ready and ent.j_is_ready) {
                         log.as(LogLevel::DEBUG)
                             << "[RDR] Entry at index " << i << " is ready with vk=" << ent.vk << " and vj=" << ent.vj;
                         ent.status = ResolverEntryStatus::READY;
                     }
+                    if (do_write) { // just for safeguarding
+                        // replace the original entry with the new version
+                        buffer.write_at(i, ent);
+                    }
                 }
-                // replace the original entry with the new version
-                buffer.write_at(i, ent);
             }
         }
 
@@ -161,8 +167,8 @@ namespace norb::riscv {
 
     public:
         void bind_inbound_to(norb::ChannelWriter<ResolverEntry> &chw) override { make_channel(chw, chan_inbound); }
-        void load_cdb(CommonDataBus &cdb) {
-            cdb_ref = std::make_shared<CommonDataBus>(cdb);
+        void load_cdb(std::shared_ptr<CommonDataBus> cdb) {
+            cdb_ref = cdb;
         }
 
         [[nodiscard]] bool full() const override { return buffer.full(); }

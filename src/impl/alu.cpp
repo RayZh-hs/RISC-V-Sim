@@ -51,7 +51,8 @@ namespace norb::riscv {
                 return (e.vj < e.imm) ? 1 : 0;  // Unsigned comparison
             
             default:
-                throw norb::AssertionError("InsType(type=" + ins_type_names[e.type] + ") wrongly sent to ALU!");
+                const std::string name = e.type < InsType::_count ? ins_type_names[static_cast<int>(e.type)] : "UNKNOWN";
+                throw norb::AssertionError("InsType(type=" + name + ") wrongly sent to ALU!");
         }
     }
 

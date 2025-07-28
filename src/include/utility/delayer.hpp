@@ -17,7 +17,7 @@ namespace norb {
 
     public:
         [[nodiscard]] bool full() const {
-            return buffer.full();
+            return occupied.count(false) == 0;
         }
 
         void push(const T &value) {

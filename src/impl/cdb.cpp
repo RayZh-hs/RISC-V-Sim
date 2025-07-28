@@ -21,7 +21,8 @@ namespace norb::riscv {
     }
 
     void CommonDataBus::flush() {
-        broadcast_queue_.pop();
+        if (not broadcast_queue_.empty())
+            broadcast_queue_.pop();
     }
 
     void CommonDataBus::clear() {

@@ -47,7 +47,8 @@ namespace norb::riscv {
         JAL,
         JALR,
         AUIPC,
-        LUI
+        LUI,
+        _count
     };
 
     enum InsClass {

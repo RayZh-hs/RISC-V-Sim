@@ -19,9 +19,9 @@ namespace norb::riscv {
         rs.resolver.bind_inbound_to(rob.chan_rob_rs_next_instruction);
         lsb.resolver.bind_inbound_to(rob.chan_rob_lsb_next_instruction);
         ba.resolver.bind_inbound_to(rob.chan_rob_ba_next_instruction);
-        rs.resolver.load_cdb(cdb);
-        lsb.resolver.load_cdb(cdb);
-        ba.resolver.load_cdb(cdb);
+        rs.resolver.load_cdb(rob.cdb_ref);
+        lsb.resolver.load_cdb(rob.cdb_ref);
+        ba.resolver.load_cdb(rob.cdb_ref);
     }
 
     void RISCV_Simulator::print_result() const {
@@ -39,6 +39,7 @@ namespace norb::riscv {
             // we can write into it
             const uint32_t raw_ins = lsb.get_instruction(pc.read());
             auto ins = Instruction::from(raw_ins);
+            log.as(LogLevel::DEBUG) << "[CONTROL] Fetched instruction: " << ins.repr();
             // ask the branch analyzer to predict the pc
             // it should return pc + 4 if ins is not a branch instruction
             const auto predicted_pc = ba.predict_pc(pc.read(), ins);
@@ -128,11 +129,11 @@ namespace norb::riscv {
         tidy();
         while (true) {
             // perform a rounding of the main control loop (rising edge)
-            instruction_fetch();
-            issue();
             execute();
+            instruction_fetch();
             write_and_broadcast();
             commit();
+            issue();
 
             // tidy() must be called last (falling edge)
             tidy();

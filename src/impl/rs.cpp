@@ -31,10 +31,10 @@ namespace norb::riscv {
         // 1. broadcast
         if (ans.read().has_value()) {
             assert(ans_pointer.read().has_value());
-            log.as(LogLevel::INFO) << "Broadcasting ALU: Broadcast(pointer=" << ans_pointer.read()->repr() << ", ans=" << ans.read().value();
+            log.as(LogLevel::INFO) << "[RS] Broadcasting: Broadcast(pointer=" << ans_pointer.read()->repr() << ", ans=" << ans.read().value() << ")";
             resolver.submit_executed_entry(ans_pointer.read().value(), ans.read().value());
         } else {
-            log.as(LogLevel::DEBUG) << "ALU: Nothing to broadcast";
+            log.as(LogLevel::DEBUG) << "[RS] Nothing to broadcast";
         }
         // 2. Listen for broadcast
         resolver.listen_broadcast();

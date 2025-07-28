@@ -37,7 +37,7 @@ namespace norb::riscv {
 
     struct ResolverEntry {
         InsType type = InsType::NOOP;
-        ResolverEntryStatus status = ResolverEntryStatus::PENDING;
+        ResolverEntryStatus status = ResolverEntryStatus::EMPTY;
         rob_pointer_t rob_pointer;
         bool k_is_ready = false;
         bool j_is_ready = false;

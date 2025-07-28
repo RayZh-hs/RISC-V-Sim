@@ -34,6 +34,8 @@ namespace norb::riscv {
         TemporaryBus<ResetData> bus_rst;
         ChannelWriter<Instruction> chan_con_rob_next_instruction;
 
+        Logger &log = Logger::get();
+
         // Connects the buses between all components (hardware linking)
         void connect_buses();
         void connect_channels();

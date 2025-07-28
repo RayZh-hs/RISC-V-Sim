@@ -29,10 +29,11 @@ namespace norb::riscv {
             Instruction ins = chan_con_rob_next_instruction.read();
             main_buffer.emplace_back(ins, ROBEntryStatus::READY, 0);
             const auto it = main_buffer.end();
-            log.as(LogLevel::DEBUG) << "[ROB] received and appended new instruction: " << ins;
+            log.as(LogLevel::DEBUG) << "[ROB] received and appended new instruction: " << ins.repr();
             // record a snapshot in the buffer
             ResolverEntry resolver_entry;
             resolver_entry.type = ins.header.ins_type;
+            resolver_entry.status = ResolverEntryStatus::PENDING;
             if (ins.rs1 != 0 and register_file.read_host(ins.rs1) != std::nullopt) {
                 // record as dependency
                 resolver_entry.qj = register_file.read_host(ins.rs1).value();

@@ -352,6 +352,10 @@ namespace norb {
             bool operator<=(const base_iterator& other) const { return !(other < *this); }
             bool operator>=(const base_iterator& other) const { return !(*this < other); }
 
+            static base_iterator make_dummy(const size_type physical_idx) {
+                return base_iterator(nullptr, physical_idx);
+            }
+
         private:
             friend class FixedBufferedQueue<T, Capacity>;
             template<typename, size_t> friend class FixedBufferedQueue;
