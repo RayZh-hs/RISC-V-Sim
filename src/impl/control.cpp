@@ -102,7 +102,7 @@ namespace norb::riscv {
             ba.on_reset(reset_data.value());
 
             // Clear the common data bus
-            cdb.clear();
+            cdb->clear();
 
             // Clear bus states
             bus_rst.clear();

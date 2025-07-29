@@ -296,7 +296,7 @@ namespace norb {
             }
 
             [[nodiscard]] int physical_index() const {
-                assert(_queue && "Iterator is not associated with a container.");
+                // assert(_queue && "Iterator is not associated with a container.");
                 return _physical_idx;
             }
 

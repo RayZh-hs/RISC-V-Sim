@@ -28,6 +28,7 @@ namespace norb::riscv {
 
     public:
         RandomDependencyResolver<C::load_store_buffer_size> resolver;
+        ~LoadStoreBuffer() override = default;
 
         void load_memory(const std::string& mem_path);
         void set_commit_bus(TemporaryBus<rob_pointer_t> &bus);

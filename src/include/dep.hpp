@@ -168,7 +168,7 @@ namespace norb::riscv {
     public:
         void bind_inbound_to(norb::ChannelWriter<ResolverEntry> &chw) override { make_channel(chw, chan_inbound); }
         void load_cdb(std::shared_ptr<CommonDataBus> cdb) {
-            cdb_ref = cdb;
+            cdb_ref = std::move(cdb);
         }
 
         [[nodiscard]] bool full() const override { return buffer.full(); }

@@ -29,7 +29,7 @@ namespace norb::riscv {
         ChannelWriter<ResolverEntry> chan_rob_rs_next_instruction;
         ChannelWriter<ResolverEntry> chan_rob_lsb_next_instruction;
         ChannelWriter<ResolverEntry> chan_rob_ba_next_instruction;
-        
+
         // - load store buffer
         TemporaryBus<rob_pointer_t> bus_con_commit;
         // - reset bus
@@ -44,9 +44,8 @@ namespace norb::riscv {
     public:
         // In the cpu, only rob has write access to the register file
         // Therefore, we can assume they are tightly coupled
-        explicit ReOrderBuffer(RegisterFile &rf, CommonDataBus &cdb) : register_file(rf) {
-            cdb_ref = std::make_shared<CommonDataBus>(cdb);
-        }
+        explicit ReOrderBuffer(RegisterFile &rf, const std::shared_ptr<CommonDataBus> &cdb_ref) :
+            register_file(rf), cdb_ref(cdb_ref) {}
 
         [[nodiscard]] bool full() const;
         [[nodiscard]] bool almost_full() const;
@@ -56,8 +55,8 @@ namespace norb::riscv {
         void on_issue();
         void on_broadcast();
         void on_commit();
-        
+
         // Implement Resettable interface
-        void on_reset(const ResetData& reset_data) override;
+        void on_reset(const ResetData &reset_data) override;
     };
 }  // namespace norb::riscv

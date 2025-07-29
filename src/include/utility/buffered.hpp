@@ -7,6 +7,7 @@
 #include <optional>
 #include <stdexcept>
 #include <vector>
+#include <iostream>
 
 namespace norb {
     class AssertionError final : public std::runtime_error {
@@ -95,7 +96,10 @@ namespace norb {
 
         explicit Buffered(const T& ori) : old_value(ori), new_value(ori) { impl::BufferedManager::add(this); }
 
-        ~Buffered() override { impl::BufferedManager::remove(this); }
+        // ~Buffered() override {
+        //     // std::cout << "Deallocating buffered: " << this << '\n';
+        //     // impl::BufferedManager::remove(this);
+        // }
 
         Buffered(const Buffered&) = delete;
         Buffered& operator=(const Buffered&) = delete;

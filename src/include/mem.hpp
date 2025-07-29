@@ -7,6 +7,7 @@
 #include <dep.hpp>
 #include <fstream>
 #include <sstream>
+#include <cstdint>
 
 #include "utility/constants.hpp"
 
@@ -15,7 +16,7 @@ namespace C = norb::riscv::constants;
 namespace norb::riscv {
     namespace impl {
         template <size_t size>
-        void memory_decode(std::array<C::b_uint8_t, size>& mem, std::istream& is) {
+        void memory_decode(std::array<uint8_t, size>& mem, std::istream& is) {
             size_t current_pos = 0;
             std::string token;
 
@@ -52,7 +53,7 @@ namespace norb::riscv {
                     }
 
                     // Write the byte to memory and advance the position.
-                    mem[current_pos].write(byte_val);
+                    mem[current_pos] = byte_val;
                     ++current_pos;
                 }
             }
@@ -60,12 +61,16 @@ namespace norb::riscv {
     }  // namespace impl
 
     class Memory {
-        std::array<C::b_uint8_t, C::memory_size> memory;
+        std::array<uint8_t, C::memory_size> memory;
 
     public:
         explicit Memory(const std::string& path) {
             std::ifstream file(path);
             impl::memory_decode(memory, file);
+        }
+
+        ~Memory() {
+            std::cout << "Deallocating Memory" << '\n';
         }
 
         // read 4 bytes of data from the memory, in Little Endian
@@ -74,22 +79,22 @@ namespace norb::riscv {
                 throw std::out_of_range("Memory read out of bounds at index: " + std::to_string(index));
             }
             // both | and + work here
-            return (memory[index].read() | (memory[index + 1].read() << 8) | (memory[index + 2].read() << 16) |
-                    (memory[index + 3].read() << 24));
+            return (memory[index] | (memory[index + 1] << 8) | (memory[index + 2] << 16) |
+                    (memory[index + 3] << 24));
         }
 
         [[nodiscard]] uint8_t read_byte(uint32_t index) const {
             if (index >= C::memory_size) {
                 throw std::out_of_range("Memory read out of bounds at index: " + std::to_string(index));
             }
-            return memory[index].read();
+            return memory[index];
         }
 
         void write_byte(uint32_t index, uint8_t value) {
             if (index >= C::memory_size) {
                 throw std::out_of_range("Memory write out of bounds at index: " + std::to_string(index));
             }
-            memory[index].write(value);
+            memory[index] = (value);
         }
     };
 

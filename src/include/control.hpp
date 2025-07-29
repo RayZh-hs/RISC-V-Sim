@@ -21,7 +21,7 @@
 
 namespace norb::riscv {
     class RISCV_Simulator {
-        CommonDataBus cdb;
+        std::shared_ptr<CommonDataBus> cdb;
         LoadStoreBuffer lsb;
         RegisterFile reg;
         ReOrderBuffer rob;
@@ -52,7 +52,7 @@ namespace norb::riscv {
         [[nodiscard]] bool check_for_exit() const;
 
     public:
-        RISCV_Simulator() : rob(reg, cdb) {
+        RISCV_Simulator() : cdb(std::make_shared<CommonDataBus>()) ,rob(reg, cdb) {
             auto &log = Logger::get();
             log.as(LogLevel::DEBUG) << "Setting up hardware RISC-V connections";
             connect_buses();
