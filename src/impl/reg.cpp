@@ -2,7 +2,9 @@
 // - implements the register file
 
 #include "reg.hpp"
+
 #include <stdexcept>
+#include <third_party/logger.hpp>
 
 namespace norb::riscv {
 
@@ -21,13 +23,9 @@ namespace norb::riscv {
         return std::nullopt;
     }
 
-    uint32_t RegisterFile::read(int index) const {
-        return registers[index].value.read();
-    }
+    uint32_t RegisterFile::read(int index) const { return registers[index].value.read(); }
 
-    void RegisterFile::write(int index, uint32_t value) {
-        registers[index].value.write(value);
-    }
+    void RegisterFile::write(int index, uint32_t value) { registers[index].value.write(value); }
 
     void RegisterFile::write_host(int index, const rob_pointer_t &host) {
         if (index < 0 or index >= C::register_file_size) {
@@ -40,17 +38,29 @@ namespace norb::riscv {
         registers[index].has_host.write(true);
     }
 
-    void RegisterFile::on_reset(const ResetData& reset_data) {
+    void RegisterFile::on_reset(const ResetData &reset_data) {
         if (reset_data.reset_signal) {
-            // Clear all host dependencies and reset all registers to 0
+            // Clear all host dependencies
             for (int i = 0; i < C::register_file_size; ++i) {
-                registers[i].value.write(0);
                 registers[i].has_host.write(false);
-                if (i != 0) {  // Don't reset the host for x0 register
+                if (i != 0) {
                     registers[i].host.write(rob_pointer_t{});
                 }
             }
         }
+    }
+
+    void RegisterFile::print_state() {
+        auto &log = Logger::get();
+        log.as(LogLevel::DEBUG) << "Register File information:";
+        std::string s;
+        for (int i = 0; i < C::register_file_size; ++i) {
+            s += ("R" + std::to_string(i) + "(" + std::to_string(registers[i].value.read()));
+            if (registers[i].has_host.read())
+                s += "[rob=" + std::to_string(registers[i].host.read().physical_index()) + "]";
+            s += ") ";
+        }
+        log.as(LogLevel::DEBUG) << s;
     }
 
 }  // namespace norb::riscv

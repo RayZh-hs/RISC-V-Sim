@@ -80,19 +80,29 @@ namespace norb::riscv {
     void BranchAnalyzer::on_issue() { resolver.listen_inbound(); }
 
     void BranchAnalyzer::on_broadcast() {
-        const auto to_broadcast = resolver.get_ready_entry();
-        if (to_broadcast.has_value()) {
-            const bool real_jump = should_jump(to_broadcast.value());
-            const bool had_jumped = to_broadcast->had_jumped;
-            predictor.move_state(real_jump);  // update the predictor state
-            logger.as(LogLevel::INFO) << "[BA] Resolved jump: Jump(pc=" << to_broadcast->pc
-                                      << ", type=" << ins_type_names[static_cast<int>(to_broadcast->type)]
-                                      << ", real_jump=" << real_jump << ", had_jumped=" << had_jumped << ")";
+        {
+            // 1. broadcast new ready entry
+            const auto to_broadcast = resolver.get_ready_entry();
+            if (to_broadcast.has_value()) {
+                ready_ins.write(to_broadcast.value());
+            }
+        }
+        {
+            // 2. receive to rentry to broadcast (next cycle)
+            const auto to_broadcast = ready_ins.read();
+            if (to_broadcast.has_value()) {
+                const bool real_jump = should_jump(to_broadcast.value());
+                const bool had_jumped = to_broadcast->had_jumped;
+                predictor.move_state(real_jump);  // update the predictor state
+                logger.as(LogLevel::INFO) << "[BA] Resolved jump: Jump(pc=" << to_broadcast->pc
+                                          << ", type=" << ins_type_names[static_cast<int>(to_broadcast->type)]
+                                          << ", real_jump=" << real_jump << ", had_jumped=" << had_jumped << ")";
 
-            const uint32_t ret =
-                (real_jump == had_jumped) ? C::correct_branch_token : calc_pc(to_broadcast->pc, to_broadcast.value());
-            // broadcast the ret
-            resolver.submit_executed_entry(to_broadcast->rob_pointer, ret);
+                const uint32_t ret =
+                    (real_jump == had_jumped) ? C::correct_branch_token : calc_pc(to_broadcast->pc, to_broadcast.value());
+                // broadcast the ret
+                resolver.submit_executed_entry(to_broadcast->rob_pointer, ret);
+            }
         }
     }
 

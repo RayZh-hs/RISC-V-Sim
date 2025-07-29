@@ -28,6 +28,7 @@ namespace norb::riscv {
             // get the latest instruction from the bus and write it to the buffer
             Instruction ins = chan_con_rob_next_instruction.read();
             main_buffer.emplace_back(ins, ROBEntryStatus::READY, 0);
+            // Here the emplace back will take effect on the next cycle, so end() still points to the old end
             const auto it = main_buffer.end();
             log.as(LogLevel::DEBUG) << "[ROB] received and appended new instruction: " << ins.repr();
             // record a snapshot in the buffer
@@ -63,7 +64,7 @@ namespace norb::riscv {
             resolver_buffer.push_back(resolver_entry);
             // then update the dependency in the register file
             if (ins.rd != 0) {
-                register_file.write_host(ins.rd, --main_buffer.end());
+                register_file.write_host(ins.rd, it);
             }
         }
     }
@@ -107,22 +108,23 @@ namespace norb::riscv {
                         }
 
                         it.write(entry);
-                        log.as(LogLevel::DEBUG) << "[ROB] Executed REG instruction immediately: " << entry.instruction;
+                        log.as(LogLevel::DEBUG)
+                            << "[ROB] Executed REG instruction immediately: " << entry.instruction.repr();
                         return;
                     default:
                         break;
                 }
 
-                if (chw != nullptr and chw->has_data()) {
+                if (chw != nullptr and not chw->has_data()) {
                     entry.status = ROBEntryStatus::ISSUED;
                     it.write(entry);
                     // Send to the corresponding channel
                     const rob_resolver_buffer_t::iterator to_issue = it.that_of(&resolver_buffer);
                     chw->write(*to_issue);
-                    log.as(LogLevel::DEBUG) << "[ROB] Issued instruction: " << entry.instruction;
+                    log.as(LogLevel::DEBUG) << "[ROB] Issued instruction: " << entry.instruction.repr();
                     return;
                 }
-                log.as(LogLevel::DEBUG) << "[ROB] Cannot issue instruction: " << entry.instruction;
+                log.as(LogLevel::DEBUG) << "[ROB] Cannot issue instruction: " << entry.instruction.repr();
             }
         }
         log.as(LogLevel::DEBUG) << "[ROB] No instruction issuable";
@@ -151,13 +153,13 @@ namespace norb::riscv {
         auto front = main_buffer.front();
         if (front.status != ROBEntryStatus::COMPUTED) {
             // nothing to commit
-            log.as(LogLevel::DEBUG) << "[ROB] No entry to commit: Front is not ready";
+            log.as(LogLevel::DEBUG) << "[ROB] No entry to commit: Front is not ready: " << front.instruction.repr();
             return;
         }
 
         // commit the first entry
         auto &ins = front.instruction;
-        auto result = front.result;
+        const uint32_t result = front.result;
 
         log.as(LogLevel::DEBUG) << "[ROB] Committing instruction: " << ins << " with result: " << result;
 
@@ -191,7 +193,8 @@ namespace norb::riscv {
             case InsPos::BRANCH:
                 // Check if this was a wrong branch
                 // If correct, then nothing needs be done
-                if (not result == C::correct_branch_token) {
+                log.as(LogLevel::DEBUG) << "[ROB] Handling committed branch: " << ins.repr();
+                if (result != C::correct_branch_token) {
                     log.as(LogLevel::WARN) << "[ROB] Branch mis-prediction detected, flushing pipeline";
                     // Clear all entries after this one in ROB
                     // Write the correct pc into the rst bus to trigger rollback
@@ -228,11 +231,11 @@ namespace norb::riscv {
 
             // Clear resolver buffer
             resolver_buffer.clear();
-
-            // Clear all host dependencies in register file
-            for (int i = 1; i < C::register_file_size; ++i) {  // Skip x0 register
-                register_file.write_host(i, rob_nullptr);
-            }
+            //
+            // // Clear all host dependencies in register file
+            // for (int i = 1; i < C::register_file_size; ++i) {  // Skip x0 register
+            //     register_file.write_host(i, rob_nullptr);
+            // }
 
             log.as(LogLevel::INFO) << "[ROB] Reset completed, all buffers cleared";
         }

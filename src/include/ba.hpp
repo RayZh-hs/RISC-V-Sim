@@ -12,6 +12,7 @@ namespace norb::riscv {
 
     class BranchAnalyzer : public Resettable {
         Logger &logger = Logger::get();
+        TemporarilyBuffered<ResolvedInstructionEntry> ready_ins;
 
         [[nodiscard]] bool should_jump(const ResolvedInstructionEntry &entry) const;
         [[nodiscard]] uint32_t calc_pc(uint32_t pc, const ResolvedInstructionEntry &entry) const;

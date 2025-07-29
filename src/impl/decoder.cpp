@@ -250,7 +250,7 @@ namespace norb::riscv {
 
     bool Instruction::is_noop() const { return header.ins_type == NOOP; }
 
-    bool Instruction::is_halt() const { return header.ins_type == InsType::LUI && rd == 10 && imm == 256; }
+    bool Instruction::is_halt() const { return raw == 0x0ff00513; }
 
     std::ostream &Instruction::operator<<(std::ostream &os) const {
         os << "[Instruction " << raw << "]";

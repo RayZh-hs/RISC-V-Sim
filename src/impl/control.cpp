@@ -38,16 +38,25 @@ namespace norb::riscv {
         if (!chan_con_rob_next_instruction.has_data()) {
             // we can write into it
             const uint32_t raw_ins = lsb.get_instruction(pc.read());
-            auto ins = Instruction::from(raw_ins);
-            log.as(LogLevel::DEBUG) << "[CONTROL] Fetched instruction: " << ins.repr();
+            Instruction ins = noop;
+            try {
+                ins = Instruction::from(raw_ins);
+                log.as(LogLevel::DEBUG) << "[CONTROL] Fetched instruction: " << ins.repr();
+            } catch (...) {
+                log.as(LogLevel::WARN) << "[CONTROL] Malformed instruction: Cannot decode raw_ins=" << raw_ins;
+            }
             // ask the branch analyzer to predict the pc
             // it should return pc + 4 if ins is not a branch instruction
             const auto predicted_pc = ba.predict_pc(pc.read(), ins);
             pc.write(predicted_pc);
             ins.had_jumped = (predicted_pc != pc.read() + 4);  // if imm == 4 this cannot be wrongly predicted
             ins.pc = pc.read();
+            log.as(LogLevel::DEBUG) << "Current pc: " << pc.read() << ", Predicted pc: " << predicted_pc;
             // now the instruction forwarded to the BA by ROB will have been tagged to ensure correct rollback
-            chan_con_rob_next_instruction.write(ins);
+            if (ins.header.ins_type != NOOP)
+                chan_con_rob_next_instruction.write(ins);
+            else
+                log.as(LogLevel::DEBUG) << "Skipping NOOP";
         }
         rob.instruction_fetch();
     }
@@ -66,6 +75,7 @@ namespace norb::riscv {
     }
 
     void RISCV_Simulator::write_and_broadcast() {
+        rob.on_broadcast();
         rs.on_broadcast();
         lsb.on_broadcast();
         ba.on_broadcast();
@@ -74,6 +84,7 @@ namespace norb::riscv {
     void RISCV_Simulator::commit() {
         rob.on_commit();
         lsb.on_commit();
+        reg.print_state();
     }
 
     void RISCV_Simulator::tidy() {
@@ -83,6 +94,7 @@ namespace norb::riscv {
         buffered_flush();
         // advance the clock
         Clock::instance().tick();
+        log.as(LogLevel::DEBUG) << "";  // new line to separate cycle
     }
 
     void RISCV_Simulator::check_reset() {
@@ -93,6 +105,7 @@ namespace norb::riscv {
             log.as(LogLevel::INFO) << "[CONTROL] Reset detected, flushing pipeline and setting PC to: "
                                    << reset_data->new_pc;
 
+            buffered_flush();
             // Reset all units
             pc.on_reset(reset_data.value());
             reg.on_reset(reset_data.value());
@@ -112,6 +125,7 @@ namespace norb::riscv {
             // Clear channel states by manually flushing
             // This ensures clean state after reset
 
+            buffered_flush();
             log.as(LogLevel::INFO) << "[CONTROL] Reset completed, system ready";
         }
     }

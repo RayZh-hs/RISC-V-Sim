@@ -27,7 +27,7 @@ namespace norb::riscv {
         uint8_t read_byte(uint32_t addr);
 
     public:
-        RandomDependencyResolver<C::load_store_buffer_size> resolver;
+        SequentialDependencyResolver<C::load_store_buffer_size> resolver;
         ~LoadStoreBuffer() override = default;
 
         void load_memory(const std::string& mem_path);

@@ -69,10 +69,6 @@ namespace norb::riscv {
             impl::memory_decode(memory, file);
         }
 
-        ~Memory() {
-            std::cout << "Deallocating Memory" << '\n';
-        }
-
         // read 4 bytes of data from the memory, in Little Endian
         [[nodiscard]] uint32_t read_word(uint32_t index) const {
             if (index + 3 >= C::memory_size) {

@@ -36,6 +36,8 @@ namespace norb::riscv {
         
         // Implement Resettable interface
         void on_reset(const ResetData& reset_data) override;
+
+        void print_state();
     };
 
 }  // namespace norb::riscv

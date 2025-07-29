@@ -87,9 +87,9 @@ namespace norb {
     template <typename T>
     class Buffered : public impl::BufferedFlushInterface_ {
     private:
-        T old_value;
-        T new_value;
-        Lock write_lock;
+        T old_value{};
+        T new_value{};
+        Lock write_lock{};
 
     public:
         explicit Buffered() { impl::BufferedManager::add(this); }

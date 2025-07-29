@@ -47,9 +47,7 @@ namespace norb::riscv {
 
     public:
         void bind_inbound_to(norb::ChannelWriter<ResolverEntry> &chw) override { make_channel(chw, chan_inbound); }
-        void load_cdb(std::shared_ptr<CommonDataBus> cdb) {
-            cdb_ref = std::move(cdb);
-        }
+        void load_cdb(std::shared_ptr<CommonDataBus> cdb) { cdb_ref = std::move(cdb); }
 
         [[nodiscard]] bool full() const {
             return buffer.find_if(
@@ -104,7 +102,7 @@ namespace norb::riscv {
                             << "[RDR] Entry at index " << i << " is ready with vk=" << ent.vk << " and vj=" << ent.vj;
                         ent.status = ResolverEntryStatus::READY;
                     }
-                    if (do_write) { // just for safeguarding
+                    if (do_write) {  // just for safeguarding
                         // replace the original entry with the new version
                         buffer.write_at(i, ent);
                     }
@@ -167,9 +165,7 @@ namespace norb::riscv {
 
     public:
         void bind_inbound_to(norb::ChannelWriter<ResolverEntry> &chw) override { make_channel(chw, chan_inbound); }
-        void load_cdb(std::shared_ptr<CommonDataBus> cdb) {
-            cdb_ref = std::move(cdb);
-        }
+        void load_cdb(std::shared_ptr<CommonDataBus> cdb) { cdb_ref = std::move(cdb); }
 
         [[nodiscard]] bool full() const override { return buffer.full(); }
 
@@ -197,12 +193,14 @@ namespace norb::riscv {
             for (int i = 0; i < buffer.size(); ++i) {
                 auto ent = buffer.read_at(i);
                 if (ent.status == ResolverEntryStatus::PENDING) {
+                    bool do_write = false;
                     if (ent.qk == news.rob_pointer and not ent.k_is_ready) {
                         log.as(LogLevel::DEBUG)
                             << "[SDR] Resolving entry at index " << i << " with qk=" << ent.qk.repr()
                             << " | target entry rob=" << ent.rob_pointer.repr();
                         ent.k_is_ready = true;
                         ent.vk = news.value;
+                        do_write = true;
                     }
                     if (ent.qj == news.rob_pointer and not ent.j_is_ready) {
                         log.as(LogLevel::DEBUG)
@@ -210,28 +208,30 @@ namespace norb::riscv {
                             << " | target entry rob=" << ent.rob_pointer.repr();
                         ent.j_is_ready = true;
                         ent.vj = news.value;
+                        do_write = true;
                     }
                     if (ent.k_is_ready and ent.j_is_ready) {
                         log.as(LogLevel::DEBUG)
                             << "[RDR] Entry at index " << i << " is ready with vk=" << ent.vk << " and vj=" << ent.vj;
                         ent.status = ResolverEntryStatus::READY;
+                        do_write = true;
+                    }
+                    if (do_write) {
+                        // replace the original entry with the new version
+                        buffer.write_at(i, ent);
                     }
                 }
-                // replace the original entry with the new version
-                buffer.write_at(i, ent);
             }
         }
 
         std::optional<ResolvedInstructionEntry> get_ready_entry() override {
             auto &log = Logger::get();
-            if (buffer.empty())
-                return std::nullopt;
+            if (buffer.empty()) return std::nullopt;
             auto ent = buffer.front();
             if (ent.status == ResolverEntryStatus::READY) {
                 ent.status = ResolverEntryStatus::EXECUTING;
                 buffer.write_at(0, ent);
-                log.as(LogLevel::DEBUG) << "[SDR] Found ready entry at index " << 0
-                                        << " | rob_pointer=" << ent.rob_pointer.repr();
+                log.as(LogLevel::DEBUG) << "[SDR] Found ready entry at index " << 0 << ": " << ent.repr();
                 return ResolvedInstructionEntry(ent);
             }
             return std::nullopt;
