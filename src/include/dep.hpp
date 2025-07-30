@@ -33,6 +33,7 @@ namespace norb::riscv {
         virtual std::optional<ResolvedInstructionEntry> get_ready_entry() = 0;
         virtual void submit_executed_entry(rob_pointer_t rob_pointer, uint32_t value) = 0;
         virtual void clear() = 0;  // Add clear method
+        virtual void print_content() const = 0;
         virtual ~DependencyResolver() = default;
     };
 
@@ -48,6 +49,38 @@ namespace norb::riscv {
     public:
         void bind_inbound_to(norb::ChannelWriter<ResolverEntry> &chw) override { make_channel(chw, chan_inbound); }
         void load_cdb(std::shared_ptr<CommonDataBus> cdb) { cdb_ref = std::move(cdb); }
+
+        void print_content() const override {
+            auto &log = Logger::get();
+            log.as(LogLevel::DEBUG) << "[RDR] Current content of the resolver buffer:";
+            for (int i = 0; i < Capacity; ++i) {
+                auto entry = buffer.read_at(i);
+                if (entry.status == ResolverEntryStatus::PENDING) {
+                    std::string msg = "[RDR] Instruction ";
+                    msg += entry.rob_pointer.read().instruction.repr() + " pending with: ";
+                    if (entry.j_is_ready) {
+                        msg += "vj=" + std::to_string(entry.vj) + ", ";
+                    } else {
+                        msg += "qj=" + std::to_string(entry.qj.repr()) + ", ";
+                    }
+                    if (entry.k_is_ready) {
+                        msg += "vk=" + std::to_string(entry.vk);
+                    } else {
+                        msg += "qk=" + std::to_string(entry.qk.repr());
+                    }
+                    log.as(LogLevel::DEBUG) << msg;
+                }
+                else if (entry.status == ResolverEntryStatus::READY) {
+                    std::string msg = "[RDR] Instruction ";
+                    msg += entry.rob_pointer.read().instruction.repr() + " ready with: ";
+                    msg += "vk=" + std::to_string(entry.vk) + ", vj=" + std::to_string(entry.vj);
+                    log.as(LogLevel::DEBUG) << msg;
+                } else if (entry.status == ResolverEntryStatus::EXECUTING) {
+                    log.as(LogLevel::DEBUG) << "[RDR] Instruction " << entry.rob_pointer.read().instruction.repr()
+                                            << " is currently executing";
+                }
+            }
+        }
 
         [[nodiscard]] bool full() const {
             return buffer.find_if(
@@ -171,6 +204,38 @@ namespace norb::riscv {
         void load_cdb(std::shared_ptr<CommonDataBus> cdb) { cdb_ref = std::move(cdb); }
 
         [[nodiscard]] bool full() const override { return buffer.full(); }
+
+        void print_content() const override {
+            auto &log = Logger::get();
+            log.as(LogLevel::DEBUG) << "[SDR] Current content of the resolver buffer:";
+            for (int i = 0; i < buffer.size(); ++i) {
+                auto entry = buffer.read_at(i);
+                if (entry.status == ResolverEntryStatus::PENDING) {
+                    std::string msg = "[SDR] Instruction ";
+                    msg += entry.rob_pointer.read().instruction.repr() + " pending with: ";
+                    if (entry.j_is_ready) {
+                        msg += "vj=" + std::to_string(entry.vj) + ", ";
+                    } else {
+                        msg += "qj=" + std::to_string(entry.qj.repr()) + ", ";
+                    }
+                    if (entry.k_is_ready) {
+                        msg += "vk=" + std::to_string(entry.vk);
+                    } else {
+                        msg += "qk=" + std::to_string(entry.qk.repr());
+                    }
+                    log.as(LogLevel::DEBUG) << msg;
+                }
+                else if (entry.status == ResolverEntryStatus::READY) {
+                    std::string msg = "[SDR] Instruction ";
+                    msg += entry.rob_pointer.read().instruction.repr() + " ready with: ";
+                    msg += "vk=" + std::to_string(entry.vk) + ", vj=" + std::to_string(entry.vj);
+                    log.as(LogLevel::DEBUG) << msg;
+                } else if (entry.status == ResolverEntryStatus::EXECUTING) {
+                    log.as(LogLevel::DEBUG) << "[SDR] Instruction " << entry.rob_pointer.read().instruction.repr()
+                                            << " is currently executing";
+                }
+            }
+        }
 
         void listen_inbound() override {
             auto &log = Logger::get();

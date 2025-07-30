@@ -41,6 +41,9 @@ namespace norb::riscv {
         RegisterFile &register_file;
         Logger &log = Logger::get();
 
+        // lookup computed values and return the resolution before commit
+        [[nodiscard]] std::optional<uint32_t> try_resolve_in_rob(const rob_pointer_t &pointer) const;
+
     public:
         // In the cpu, only rob has write access to the register file
         // Therefore, we can assume they are tightly coupled

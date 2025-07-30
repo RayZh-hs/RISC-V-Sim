@@ -16,6 +16,8 @@ namespace norb::riscv {
 
         BroadcastEntry(rob_pointer_t rob_pointer, uint32_t value);
         BroadcastEntry() = default;
+
+        [[nodiscard]] std::string repr() const;
     };
 
     // This is the only system in the RISC-V simulator that does not follow strict latch logic

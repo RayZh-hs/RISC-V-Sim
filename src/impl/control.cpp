@@ -36,6 +36,14 @@ namespace norb::riscv {
         std::cout << (reg.read(RegName::A0) & 0xff) << std::endl;
     }
 
+    void RISCV_Simulator::print_cdb_info() const {
+        const auto info = cdb->read_as_optional();
+        if (info.has_value())
+            log.as(LogLevel::DEBUG) << "[CDB] This cycle: Broadcasting " << info->repr();
+        else
+            log.as(LogLevel::DEBUG) << "[CDB] This cycle: No broadcast data";
+    }
+
     void RISCV_Simulator::instruction_fetch() {
         if (!chan_con_rob_next_instruction.has_data()) {
             // we can write into it
@@ -90,6 +98,15 @@ namespace norb::riscv {
     }
 
     void RISCV_Simulator::tidy() {
+        if (C::peek_resolvers_after_cycle) {
+            // debug each buffer
+            log.as(LogLevel::INFO) << "[CONTROL] Peek RS resolver:";
+            rs.resolver.print_content();
+            log.as(LogLevel::INFO) << "[CONTROL] Peek LSB resolver:";
+            lsb.resolver.print_content();
+            log.as(LogLevel::INFO) << "[CONTROL] Peek BA resolver:";
+            ba.resolver.print_content();
+        }
         // after each cycle, reset the zero register
         reg.write(RegName::ZERO, 0x00);
         // flush the buffered values (mimicking the behavior of latches)
@@ -146,6 +163,9 @@ namespace norb::riscv {
         tidy();
         int loop_counter = 0;
         for (loop_counter = 0; loop_counter < C::loop_timeout; ++loop_counter) {
+            // debugging info
+            print_cdb_info();
+
             // perform a rounding of the main control loop (rising edge)
             execute();
             instruction_fetch();

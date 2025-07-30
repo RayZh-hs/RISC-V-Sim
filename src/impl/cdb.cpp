@@ -8,6 +8,10 @@ namespace norb::riscv {
     BroadcastEntry::BroadcastEntry(rob_pointer_t rob_pointer, uint32_t value)
         : rob_pointer(rob_pointer), value(value) {}
 
+    std::string BroadcastEntry::repr() const {
+        return "BroadcastEntry(rob=" + std::to_string(rob_pointer.repr()) + ", val=" + std::to_string(value) + ")";
+    }
+
     void CommonDataBus::broadcast(const BroadcastEntry& entry) {
         changes_queue_.push(entry);
     }

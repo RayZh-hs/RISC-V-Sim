@@ -51,7 +51,15 @@ namespace norb::riscv {
             } else {
                 // record as dependency
                 resolver_entry.qj = register_file.read_host(ins.rs1).value();
-                resolver_entry.j_is_ready = false;
+                //! try self-resolve for computed but not yet committed instructions
+                const auto self_resolved = try_resolve_in_rob(resolver_entry.qj);
+                if (self_resolved.has_value()) {
+                    resolver_entry.vj = self_resolved.value();
+                    resolver_entry.j_is_ready = true;
+                } else {
+                    resolver_entry.qj = register_file.read_host(ins.rs1).value();
+                    resolver_entry.j_is_ready = false;
+                }
             }
             // resolve rs2
             if (ins.rs2 == 0 or register_file.read_host(ins.rs2) == std::nullopt) {
@@ -65,7 +73,15 @@ namespace norb::riscv {
             } else {
                 // record as dependency
                 resolver_entry.qk = register_file.read_host(ins.rs2).value();
-                resolver_entry.k_is_ready = false;
+                //! try self-resolve for computed but not yet committed instructions
+                const auto self_resolved = try_resolve_in_rob(resolver_entry.qk);
+                if (self_resolved.has_value()) {
+                    resolver_entry.vk = self_resolved.value();
+                    resolver_entry.k_is_ready = true;
+                } else {
+                    resolver_entry.qk = register_file.read_host(ins.rs2).value();
+                    resolver_entry.k_is_ready = false;
+                }
             }
             resolver_entry.status = (resolver_entry.k_is_ready and resolver_entry.j_is_ready)
                 ? ResolverEntryStatus::READY
@@ -275,6 +291,17 @@ namespace norb::riscv {
 
             log.as(LogLevel::INFO) << "[ROB] Reset completed, all buffers cleared";
         }
+    }
+
+    std::optional<uint32_t> ReOrderBuffer::try_resolve_in_rob(const rob_pointer_t& pointer) const {
+        for (auto iter = main_buffer.begin(); iter != main_buffer.end(); ++iter) {
+            const auto entry = iter.read();
+            if (entry.status == ROBEntryStatus::COMPUTED and iter == pointer) {
+                log.as(LogLevel::DEBUG) << "ROB self resolved pointer: " << pointer.repr();
+                return entry.result;
+            }
+        }
+        return std::nullopt;
     }
 
 }  // namespace norb::riscv

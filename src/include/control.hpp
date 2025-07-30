@@ -39,6 +39,7 @@ namespace norb::riscv {
         void connect_buses();
         void connect_channels();
         void print_result() const;
+        void print_cdb_info() const;
 
         void instruction_fetch();
         void issue();
