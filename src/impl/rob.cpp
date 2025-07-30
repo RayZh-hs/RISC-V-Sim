@@ -184,6 +184,12 @@ namespace norb::riscv {
 
         log.as(LogLevel::DEBUG) << "[ROB] Committing instruction: " << ins << " with result: " << result;
 
+        if (ins.is_halt()) {
+            log.as(LogLevel::INFO) << "[ROB] Program termination detected";
+            bus_rob_has_committed_exit.write(true);
+            return;
+        }
+
         // Handle different types of commits
         switch (ins.header.ins_pos) {
             case InsPos::ALU:
@@ -207,7 +213,7 @@ namespace norb::riscv {
                     }
                 } else {
                     // Store instruction - notify LSB via bus
-                    bus_con_commit.write(main_buffer.begin());
+                    bus_rob_commit.write(main_buffer.begin());
                 }
                 break;
 
@@ -232,11 +238,6 @@ namespace norb::riscv {
                 log.as(LogLevel::ERROR) << "[ROB] Unknown instruction position for commit: "
                                         << static_cast<int>(ins.header.ins_pos);
                 break;
-        }
-
-        if (ins.is_halt()) {
-            log.as(LogLevel::INFO) << "[ROB] Program termination detected";
-            bus_rob_has_committed_exit.write(true);
         }
 
         // Remove the committed entry from buffers

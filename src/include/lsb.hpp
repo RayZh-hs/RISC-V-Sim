@@ -15,7 +15,7 @@ namespace norb::riscv {
     private:
         Delayer<ResolvedInstructionEntry, C::mem_access_delay, C::load_store_buffer_size> delayer;
         std::unique_ptr<Memory> memory = nullptr;
-        TemporaryBus<rob_pointer_t> bus_con_commit;
+        TemporaryBus<rob_pointer_t> bus_rob_commit;
         Logger &log = Logger::get();
 
         // These objects are to keep track of modifications before commit

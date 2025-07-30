@@ -30,7 +30,6 @@ namespace norb::riscv {
         BranchAnalyzer ba;
 
         Bus<bool> bus_rob_has_committed_exit;
-        TemporaryBus<rob_pointer_t> bus_con_commit;
         TemporaryBus<ResetData> bus_rst;
         ChannelWriter<Instruction> chan_con_rob_next_instruction;
 

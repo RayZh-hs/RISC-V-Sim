@@ -13,7 +13,7 @@ namespace norb::riscv {
     void RISCV_Simulator::connect_buses() {
         bus_rob_has_committed_exit.connect(rob.bus_rob_has_committed_exit);
         bus_rst.connect(rob.bus_rst);
-        lsb.set_commit_bus(bus_con_commit);
+        lsb.set_commit_bus(rob.bus_rob_commit);
     }
 
     void RISCV_Simulator::connect_channels() {
@@ -33,7 +33,7 @@ namespace norb::riscv {
             log.as(LogLevel::INFO) << "x" << i << ": " << reg.read(i);
         }
         // output the return value of the program (stored in x10)
-        std::cout << reg.read(RegName::A0) << std::endl;
+        std::cout << (reg.read(RegName::A0) & 0xff) << std::endl;
     }
 
     void RISCV_Simulator::instruction_fetch() {
@@ -124,7 +124,6 @@ namespace norb::riscv {
             // Clear bus states
             bus_rst.clear();
             bus_rob_has_committed_exit.clear();
-            bus_con_commit.clear();
 
             // Clear channel states by manually flushing
             chan_con_rob_next_instruction.clear();

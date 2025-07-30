@@ -85,14 +85,16 @@ namespace norb::riscv {
 
     void BranchAnalyzer::on_broadcast() {
         {
-            // 1. broadcast new ready entry
+            // 1. listen for newly broadcast entry
+            resolver.listen_broadcast();
+            // 2. broadcast new ready entry
             const auto to_broadcast = resolver.get_ready_entry();
             if (to_broadcast.has_value()) {
                 ready_ins.write(to_broadcast.value());
             }
         }
         {
-            // 2. retrieve entry to broadcast (next cycle)
+            // 3. retrieve entry to broadcast (next cycle)
             const auto to_broadcast = ready_ins.read();
             if (to_broadcast.has_value()) {
                 const bool real_jump = should_jump(to_broadcast.value());
@@ -105,6 +107,7 @@ namespace norb::riscv {
                 const uint32_t ret =
                     (real_jump == had_jumped) ? C::correct_branch_token : calc_pc(to_broadcast->pc, to_broadcast.value());
                 // broadcast the ret
+                Logger::get().as(LogLevel::INFO) << "[BA] Broadcasting: Broadcast(pointer=" << to_broadcast->rob_pointer.repr() << ", ans=" << ret << ")";
                 resolver.submit_executed_entry(to_broadcast->rob_pointer, ret);
             }
         }

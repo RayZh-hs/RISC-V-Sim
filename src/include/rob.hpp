@@ -31,7 +31,7 @@ namespace norb::riscv {
         ChannelWriter<ResolverEntry> chan_rob_ba_next_instruction;
 
         // - load store buffer
-        TemporaryBus<rob_pointer_t> bus_con_commit;
+        TemporaryBus<rob_pointer_t> bus_rob_commit;
         // - reset bus
         TemporaryBus<ResetData> bus_rst;
 
