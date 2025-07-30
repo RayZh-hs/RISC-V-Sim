@@ -73,6 +73,8 @@ namespace norb::riscv {
             or ins.header.ins_type == InsType::JALR) {
             return pc + 4;  // Default to next instruction
         } else {
+            if (ins.header.ins_type == JAL)
+                return pc + ins.imm;
             if (predictor.predict_should_jump()) {
                 return pc + ins.imm;  // Predict taken branch
             } else {

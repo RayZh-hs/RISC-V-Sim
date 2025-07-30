@@ -31,14 +31,10 @@ namespace norb::riscv {
             // Here the emplace back will take effect on the next cycle, so end() still points to the old end
             const auto it = main_buffer.end();
             //! Edge Case: The dependency IS BEING broadcast in cdb at the time of instruction fetch
-            //! In such a scenario we need to retreive the data from cdb as well
+            //! In such a scenario we need to retrieve the data from cdb as well
             log.as(LogLevel::DEBUG) << "[ROB] received and appended new instruction: " << ins.repr()
                                     << " at [rob=" << it.physical_index() << "]";
-            std::optional<BroadcastEntry> cdb_top;
-            if (cdb_ref->empty())
-                cdb_top = std::nullopt;
-            else
-                cdb_top = cdb_ref->read();
+            const auto cdb_top = cdb_ref->read_as_optional();
             // record a snapshot in the buffer
             ResolverEntry resolver_entry;
             resolver_entry.type = ins.header.ins_type;
@@ -89,7 +85,10 @@ namespace norb::riscv {
 
     void ReOrderBuffer::on_issue() {
         auto &log = Logger::get();
+        // we need to make sure that the cdb broadcast updates all READY objects
+        const auto cdb_top = cdb_ref->read_as_optional();
         // get the first entry that is ready
+        bool has_sent = false;
         for (auto it = main_buffer.begin(); it != main_buffer.end(); ++it) {
             if (it.read().status == ROBEntryStatus::READY) {
                 auto entry = *it;
@@ -125,7 +124,8 @@ namespace norb::riscv {
                                 return;
                         }
 
-                        it.write(entry);  // this will take effect on the next cycle, when the broadcast info will sink in
+                        it.write(
+                            entry);  // this will take effect on the next cycle, when the broadcast info will sink in
                         log.as(LogLevel::DEBUG)
                             << "[ROB] Executed REG instruction immediately: " << entry.instruction.repr();
                         // Broadcast immediately and on_broadcast in the next cycle change ISSUED to COMPUTED
@@ -136,14 +136,24 @@ namespace norb::riscv {
                         break;
                 }
 
-                if (chw != nullptr and not chw->has_data()) {
+                if (chw != nullptr and not chw->has_data() and not has_sent) {
+                    has_sent = true;
                     entry.status = ROBEntryStatus::ISSUED;
                     it.write(entry);
                     // Send to the corresponding channel
-                    const rob_resolver_buffer_t::iterator to_issue = it.that_of(&resolver_buffer);
-                    chw->write(*to_issue);
+                    rob_resolver_buffer_t::iterator to_issue = it.that_of(&resolver_buffer);
+                    // ! Make sure that the news get updated
+                    ResolverEntry resolver_entry = *to_issue;
+                    const bool changed = impl::update_with_broadcast(resolver_entry, cdb_top);
+                    chw->write(resolver_entry);
+                    if (changed) to_issue.write(resolver_entry);
                     log.as(LogLevel::DEBUG) << "[ROB] Issued instruction: " << entry.instruction.repr();
-                    return;
+                    continue;
+                } else {
+                    rob_resolver_buffer_t::iterator will_issue = it.that_of(&resolver_buffer);
+                    ResolverEntry resolver_entry = *will_issue;
+                    const bool changed = impl::update_with_broadcast(resolver_entry, cdb_top);
+                    if (changed) will_issue.write(resolver_entry);
                 }
                 log.as(LogLevel::DEBUG) << "[ROB] Cannot issue instruction: " << entry.instruction.repr();
             }

@@ -56,6 +56,7 @@ namespace norb::riscv {
 
         void listen_inbound() override {
             auto &log = Logger::get();
+            auto cdb_top = cdb_ref->read_as_optional();
             if (chan_inbound.has_data()) {
                 log.as(LogLevel::DEBUG) << "[RDR] Acquired new data";
                 const auto idx_new_entry = buffer.find_if(
@@ -64,7 +65,9 @@ namespace norb::riscv {
                     log.as(LogLevel::DEBUG) << "[RDR] The buffer is already full";
                     return;  // this means that the array is full
                 }
-                const auto new_entry = chan_inbound.read();
+                auto new_entry = chan_inbound.read();
+                // modify if current CDB coincides
+                impl::update_with_broadcast(new_entry, cdb_top);
                 // now insert into the place of the new entry
                 log.as(LogLevel::INFO) << "[RDR] Writing new instruction=" << new_entry.repr();
                 buffer.write_at(idx_new_entry, new_entry);
@@ -171,13 +174,15 @@ namespace norb::riscv {
 
         void listen_inbound() override {
             auto &log = Logger::get();
+            const auto cdb_top = cdb_ref->read_as_optional();
             if (chan_inbound.has_data()) {
                 log.as(LogLevel::DEBUG) << "[SDR] Acquired new data";
                 if (buffer.full()) {
                     log.as(LogLevel::DEBUG) << "[SDR] The buffer is already full";
                     return;
                 }
-                const auto new_entry = chan_inbound.read();
+                auto new_entry = chan_inbound.read();
+                impl::update_with_broadcast(new_entry, cdb_top);
                 // now insert into the place of the new entry
                 log.as(LogLevel::INFO) << "[SDR] Writing new instruction=" << new_entry.repr();
                 buffer.push(new_entry);

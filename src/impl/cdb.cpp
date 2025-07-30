@@ -20,6 +20,13 @@ namespace norb::riscv {
         return broadcast_queue_.front();
     }
 
+    std::optional<BroadcastEntry> CommonDataBus::read_as_optional() const {
+        if (broadcast_queue_.empty())
+            return std::nullopt;
+        return broadcast_queue_.front();
+    }
+
+
     void CommonDataBus::flush() {
         if (not broadcast_queue_.empty())
             broadcast_queue_.pop();

@@ -237,12 +237,37 @@ namespace norb::riscv {
                 break;
         }
 
+        // Extract rs1 and rs2 from instruction
+        auto decoded_rs1 = static_cast<uint8_t>((instruction >> 15) & 0b11111);
+        auto decoded_rs2 = static_cast<uint8_t>((instruction >> 20) & 0b11111);
+
+        switch (header.ins_class) {
+            case R_CLASS:
+            case S_CLASS:
+            case B_CLASS:
+                // R-type, S-type, and B-type instructions use both rs1 and rs2
+                break;
+            case I_CLASS:
+                // I-type instructions only use rs1, set rs2 to zero
+                decoded_rs2 = 0;
+                break;
+            case U_CLASS:
+            case J_CLASS:
+            case NO_CLASS:
+                // U-type, J-type instructions and NOOP don't use rs1 or rs2
+                decoded_rs1 = 0;
+                decoded_rs2 = 0;
+                break;
+            default:
+                break;
+        }
+
         Instruction ins = {.header = header,
                            .raw = instruction,
                            .imm = decoded_imm,
                            .rd = static_cast<uint8_t>((instruction >> 7) & 0b11111),
-                           .rs1 = static_cast<uint8_t>((instruction >> 15) & 0b11111),
-                           .rs2 = static_cast<uint8_t>((instruction >> 20) & 0b11111),
+                           .rs1 = decoded_rs1,
+                           .rs2 = decoded_rs2,
                            // The last two fields are manually set 
                            .had_jumped = false,
                            .pc = 0};
