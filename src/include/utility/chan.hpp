@@ -60,6 +60,12 @@ namespace norb {
             has_data_->write(true);
             data_->write(value);
         }
+
+        void clear() {
+            has_data_->flush();
+            has_data_->write(false);
+            has_data_->flush();
+        }
     };
 
     // Factory function to create connected reader and writer

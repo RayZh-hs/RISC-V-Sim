@@ -2,6 +2,7 @@
 // - implements decoding of instructions
 
 #include "decoder.hpp"
+#include "utility/dump.hpp"
 
 #include <stdexcept>
 
@@ -253,7 +254,7 @@ namespace norb::riscv {
     bool Instruction::is_halt() const { return raw == 0x0ff00513; }
 
     std::ostream &Instruction::operator<<(std::ostream &os) const {
-        os << "[Instruction " << raw << "]";
+        os << "[Instruction " << norb::dump_repr(raw) << "]";
         return os;
     }
 
@@ -262,7 +263,7 @@ namespace norb::riscv {
 
     std::string Instruction::repr() const {
         return "Instruction(type=" + ins_type_names[static_cast<int>(header.ins_type)] +
-            ", raw=" + std::to_string(raw) + ", rd=" + std::to_string(rd) + ", rs1=" + std::to_string(rs1) +
+            ", raw=" + norb::dump_repr(raw) + ", rd=" + std::to_string(rd) + ", rs1=" + std::to_string(rs1) +
             ", rs2=" + std::to_string(rs2) + ", imm=" + std::to_string(imm) + ")";
     }
 

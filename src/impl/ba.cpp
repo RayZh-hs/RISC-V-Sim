@@ -38,6 +38,10 @@ namespace norb::riscv {
 
     uint32_t BranchAnalyzer::calc_pc(uint32_t pc, const ResolvedInstructionEntry &entry) const {
         if (should_jump(entry)) {
+            if (entry.type == InsType::JALR) {
+                // PC = rs1 + imm
+                return entry.vj + entry.imm;
+            }
             return pc + entry.imm;  // Jump to target address
         } else {
             return pc + 4;  // Continue to next instruction
@@ -88,7 +92,7 @@ namespace norb::riscv {
             }
         }
         {
-            // 2. receive to rentry to broadcast (next cycle)
+            // 2. retrieve entry to broadcast (next cycle)
             const auto to_broadcast = ready_ins.read();
             if (to_broadcast.has_value()) {
                 const bool real_jump = should_jump(to_broadcast.value());

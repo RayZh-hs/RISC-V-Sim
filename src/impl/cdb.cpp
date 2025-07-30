@@ -9,7 +9,7 @@ namespace norb::riscv {
         : rob_pointer(rob_pointer), value(value) {}
 
     void CommonDataBus::broadcast(const BroadcastEntry& entry) {
-        broadcast_queue_.push(entry);
+        changes_queue_.push(entry);
     }
 
     bool CommonDataBus::empty() const {
@@ -23,11 +23,19 @@ namespace norb::riscv {
     void CommonDataBus::flush() {
         if (not broadcast_queue_.empty())
             broadcast_queue_.pop();
+        // append changes
+        while (not changes_queue_.empty()) {
+            broadcast_queue_.push(changes_queue_.front());
+            changes_queue_.pop();
+        }
     }
 
     void CommonDataBus::clear() {
         while (not broadcast_queue_.empty()) {
             broadcast_queue_.pop();
+        }
+        while (not broadcast_queue_.empty()) {
+            changes_queue_.pop();
         }
     }
 

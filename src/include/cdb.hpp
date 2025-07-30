@@ -21,6 +21,7 @@ namespace norb::riscv {
     // It is designed so for simpler interface and to let multiple dataflows through
     class CommonDataBus {
         std::queue<BroadcastEntry> broadcast_queue_{};
+        std::queue<BroadcastEntry> changes_queue_{};
 
     public:
         CommonDataBus() = default;

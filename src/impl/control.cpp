@@ -3,6 +3,8 @@
 
 #include "control.hpp"
 
+#include <utility/dump.hpp>
+
 #include "third_party/logger.hpp"
 #include "utility/clock.hpp"
 
@@ -51,7 +53,7 @@ namespace norb::riscv {
             pc.write(predicted_pc);
             ins.had_jumped = (predicted_pc != pc.read() + 4);  // if imm == 4 this cannot be wrongly predicted
             ins.pc = pc.read();
-            log.as(LogLevel::DEBUG) << "Current pc: " << pc.read() << ", Predicted pc: " << predicted_pc;
+            log.as(LogLevel::DEBUG) << "Current pc: " << norb::hex(pc.read()) << ", Predicted pc: " << norb::hex(predicted_pc);
             // now the instruction forwarded to the BA by ROB will have been tagged to ensure correct rollback
             if (ins.header.ins_type != NOOP)
                 chan_con_rob_next_instruction.write(ins);
@@ -92,6 +94,8 @@ namespace norb::riscv {
         reg.write(RegName::ZERO, 0x00);
         // flush the buffered values (mimicking the behavior of latches)
         buffered_flush();
+        // flush the CDB (externally managed)
+        cdb->flush();
         // advance the clock
         Clock::instance().tick();
         log.as(LogLevel::DEBUG) << "";  // new line to separate cycle
@@ -105,7 +109,7 @@ namespace norb::riscv {
             log.as(LogLevel::INFO) << "[CONTROL] Reset detected, flushing pipeline and setting PC to: "
                                    << reset_data->new_pc;
 
-            buffered_flush();
+            buffered_flush();   // this will make sure pending actions (like JAL, JALR will still write into the register)
             // Reset all units
             pc.on_reset(reset_data.value());
             reg.on_reset(reset_data.value());
@@ -123,7 +127,7 @@ namespace norb::riscv {
             bus_con_commit.clear();
 
             // Clear channel states by manually flushing
-            // This ensures clean state after reset
+            chan_con_rob_next_instruction.clear();
 
             buffered_flush();
             log.as(LogLevel::INFO) << "[CONTROL] Reset completed, system ready";

@@ -30,28 +30,46 @@ namespace norb::riscv {
             main_buffer.emplace_back(ins, ROBEntryStatus::READY, 0);
             // Here the emplace back will take effect on the next cycle, so end() still points to the old end
             const auto it = main_buffer.end();
-            log.as(LogLevel::DEBUG) << "[ROB] received and appended new instruction: " << ins.repr();
+            //! Edge Case: The dependency IS BEING broadcast in cdb at the time of instruction fetch
+            //! In such a scenario we need to retreive the data from cdb as well
+            log.as(LogLevel::DEBUG) << "[ROB] received and appended new instruction: " << ins.repr()
+                                    << " at [rob=" << it.physical_index() << "]";
+            std::optional<BroadcastEntry> cdb_top;
+            if (cdb_ref->empty())
+                cdb_top = std::nullopt;
+            else
+                cdb_top = cdb_ref->read();
             // record a snapshot in the buffer
             ResolverEntry resolver_entry;
             resolver_entry.type = ins.header.ins_type;
             resolver_entry.status = ResolverEntryStatus::PENDING;
-            if (ins.rs1 != 0 and register_file.read_host(ins.rs1) != std::nullopt) {
-                // record as dependency
-                resolver_entry.qj = register_file.read_host(ins.rs1).value();
-                resolver_entry.j_is_ready = false;
-            } else {
+            // resolve rs1
+            if (ins.rs1 == 0 or register_file.read_host(ins.rs1) == std::nullopt) {
                 // record as value
                 resolver_entry.vj = register_file.read(ins.rs1);
                 resolver_entry.j_is_ready = true;
-            }
-            if (ins.rs2 != 0 and register_file.read_host(ins.rs2) != std::nullopt) {
-                // record as dependency
-                resolver_entry.qk = register_file.read_host(ins.rs2).value();
-                resolver_entry.k_is_ready = false;
+            } else if (cdb_top.has_value() and cdb_top->rob_pointer == register_file.read_host(ins.rs1)) {
+                // record as value from CDB
+                resolver_entry.vj = cdb_top->value;
+                resolver_entry.j_is_ready = true;
             } else {
+                // record as dependency
+                resolver_entry.qj = register_file.read_host(ins.rs1).value();
+                resolver_entry.j_is_ready = false;
+            }
+            // resolve rs2
+            if (ins.rs2 == 0 or register_file.read_host(ins.rs2) == std::nullopt) {
                 // record as value
                 resolver_entry.vk = register_file.read(ins.rs2);
                 resolver_entry.k_is_ready = true;
+            } else if (cdb_top.has_value() and cdb_top->rob_pointer == register_file.read_host(ins.rs2)) {
+                // record as value from CDB
+                resolver_entry.vk = cdb_top->value;
+                resolver_entry.k_is_ready = true;
+            } else {
+                // record as dependency
+                resolver_entry.qk = register_file.read_host(ins.rs2).value();
+                resolver_entry.k_is_ready = false;
             }
             resolver_entry.status = (resolver_entry.k_is_ready and resolver_entry.j_is_ready)
                 ? ResolverEntryStatus::READY
@@ -90,7 +108,7 @@ namespace norb::riscv {
                     case InsPos::REG:
                         // Handle register operations immediately (LUI, AUIPC)
                         // These operations don't need to go through execution units
-                        entry.status = ROBEntryStatus::COMPUTED;
+                        entry.status = ROBEntryStatus::ISSUED;
 
                         // Calculate result based on instruction type
                         switch (entry.instruction.header.ins_type) {
@@ -98,7 +116,7 @@ namespace norb::riscv {
                                 entry.result = entry.instruction.imm;
                                 break;
                             case AUIPC:
-                                entry.result = entry.instruction.pc + entry.instruction.imm;
+                                entry.result = entry.instruction.pc + (entry.instruction.imm << 12);
                                 break;
                             default:
                                 log.as(LogLevel::ERROR)
@@ -107,9 +125,12 @@ namespace norb::riscv {
                                 return;
                         }
 
-                        it.write(entry);
+                        it.write(entry);  // this will take effect on the next cycle, when the broadcast info will sink in
                         log.as(LogLevel::DEBUG)
                             << "[ROB] Executed REG instruction immediately: " << entry.instruction.repr();
+                        // Broadcast immediately and on_broadcast in the next cycle change ISSUED to COMPUTED
+                        // This is to ensure that other instructions dependent on the instruction will be alerted
+                        cdb_ref->broadcast(BroadcastEntry{it, entry.result});
                         return;
                     default:
                         break;
@@ -171,7 +192,7 @@ namespace norb::riscv {
                 if (ins.rd != 0) {
                     register_file.write(ins.rd, result);
                     // Clear the host dependency since we're committing
-                    register_file.write_host(ins.rd, rob_nullptr);
+                    register_file.clear_host(ins.rd);
                 }
                 break;
 
@@ -182,7 +203,7 @@ namespace norb::riscv {
                     // Load instruction - write to register
                     if (ins.rd != 0) {
                         register_file.write(ins.rd, result);
-                        register_file.write_host(ins.rd, rob_nullptr);
+                        register_file.clear_host(ins.rd);
                     }
                 } else {
                     // Store instruction - notify LSB via bus
@@ -200,6 +221,10 @@ namespace norb::riscv {
                     // Write the correct pc into the rst bus to trigger rollback
                     uint32_t correct_pc = front.result;
                     bus_rst.write(ResetData(true, correct_pc));
+                }
+                // For JAL and JALR we will also need to write into rd
+                if (ins.header.ins_type == InsType::JAL or ins.header.ins_type == InsType::JALR) {
+                    register_file.write(ins.rd, ins.pc + 4);
                 }
                 break;
 
@@ -231,11 +256,11 @@ namespace norb::riscv {
 
             // Clear resolver buffer
             resolver_buffer.clear();
-            //
-            // // Clear all host dependencies in register file
-            // for (int i = 1; i < C::register_file_size; ++i) {  // Skip x0 register
-            //     register_file.write_host(i, rob_nullptr);
-            // }
+
+            // clear data flowing through the channels
+            chan_rob_ba_next_instruction.clear();
+            chan_rob_lsb_next_instruction.clear();
+            chan_rob_rs_next_instruction.clear();
 
             log.as(LogLevel::INFO) << "[ROB] Reset completed, all buffers cleared";
         }
