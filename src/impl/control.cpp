@@ -144,7 +144,8 @@ namespace norb::riscv {
 
     void RISCV_Simulator::run() {
         tidy();
-        while (true) {
+        int loop_counter = 0;
+        for (loop_counter = 0; loop_counter < C::loop_timeout; ++loop_counter) {
             // perform a rounding of the main control loop (rising edge)
             execute();
             instruction_fetch();
@@ -162,6 +163,9 @@ namespace norb::riscv {
             if (check_for_exit()) {
                 break;
             }
+        }
+        if (loop_counter >= C::loop_timeout) {
+            log.as(LogLevel::FATAL) << "Loop count exceeded upperbound: " << C::loop_timeout;
         }
         print_result();
     }
