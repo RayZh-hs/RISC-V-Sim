@@ -2,9 +2,10 @@
 // - implements decoding of instructions
 
 #include "decoder.hpp"
-#include "utility/dump.hpp"
 
 #include <stdexcept>
+
+#include "utility/dump.hpp"
 
 namespace norb::riscv {
 
@@ -262,13 +263,32 @@ namespace norb::riscv {
                 break;
         }
 
+        // Set rd to 0 for instructions that don't use it
+        uint8_t decoded_rd = static_cast<uint8_t>((instruction >> 7) & 0b11111);
+        switch (header.ins_class) {
+            case S_CLASS:
+            case B_CLASS:
+            case NO_CLASS:  // for noop
+                // S-type (Store) and B-type (Branch) instructions don't write to rd
+                decoded_rd = 0;
+                break;
+            case R_CLASS:
+            case I_CLASS:
+            case U_CLASS:
+            case J_CLASS:
+                // R-type, I-type, U-type, and J-type instructions do write to rd
+                break;
+            default:
+                break;
+        }
+
         Instruction ins = {.header = header,
                            .raw = instruction,
                            .imm = decoded_imm,
-                           .rd = static_cast<uint8_t>((instruction >> 7) & 0b11111),
+                           .rd = decoded_rd,
                            .rs1 = decoded_rs1,
                            .rs2 = decoded_rs2,
-                           // The last two fields are manually set 
+                           // The last two fields are manually set
                            .had_jumped = false,
                            .pc = 0};
         return ins;
@@ -289,7 +309,7 @@ namespace norb::riscv {
     std::string Instruction::repr() const {
         return "Instruction(type=" + ins_type_names[static_cast<int>(header.ins_type)] +
             ", raw=" + norb::dump_repr(raw) + ", rd=" + std::to_string(rd) + ", rs1=" + std::to_string(rs1) +
-            ", rs2=" + std::to_string(rs2) + ", imm=" + std::to_string(imm) + ", pc=" + norb::hex(pc)  + ")";
+            ", rs2=" + std::to_string(rs2) + ", imm=" + std::to_string(imm) + ", pc=" + norb::hex(pc) + ")";
     }
 
 }  // namespace norb::riscv
