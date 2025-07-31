@@ -195,6 +195,9 @@ namespace norb::riscv {
             // Clear resolver buffer
             resolver.clear();
 
+            // Clear delayer
+            delayer.clear();
+
             // Clear modification lists
             modification_list.clear();
             modification_blame.clear();

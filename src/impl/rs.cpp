@@ -48,9 +48,8 @@ namespace norb::riscv {
             // Clear resolver buffer
             resolver.clear();
             
-            // Clear delayer (note: assuming delayer has a clear method, if not, we'd need to add one)
-            // For now, we'll just note that the delayer should be cleared
-            // The delayer will naturally clear itself as items expire
+            // Clear delayer
+            delayer.clear();
             
             // Clear answer buffers
             ans.flush();  // This will clear the temporarily buffered value

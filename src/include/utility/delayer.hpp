@@ -49,5 +49,11 @@ namespace norb {
             }
             return std::nullopt;
         }
+
+        void clear() {
+            for (int i = 0; i < Capacity; i++) {
+                occupied.write_at(i, false);
+            }
+        }
     };
 }  // namespace norb

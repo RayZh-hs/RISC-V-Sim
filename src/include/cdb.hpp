@@ -59,6 +59,10 @@ namespace norb::riscv {
                 entry.vk = news->value;
                 has_been_changed = true;
             }
+            // update the status too
+            if (entry.k_is_ready and entry.j_is_ready) {
+                entry.status = ResolverEntryStatus::READY;
+            }
             return has_been_changed;
         }
     }  // namespace impl

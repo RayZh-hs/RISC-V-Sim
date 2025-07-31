@@ -28,7 +28,7 @@ namespace norb::riscv::constants {
     inline const std::string dump_registers_at_file_path = "reg.dump";
 
     inline const std::string log_file{};  // empty for no log dump
-    inline constexpr auto log_level = LogLevel::INFO;
+    inline constexpr auto log_level = LogLevel::DEBUG;
 
     using b_uint8_t = Buffered<uint8_t>;
     using b_uint16_t = Buffered<uint16_t>;

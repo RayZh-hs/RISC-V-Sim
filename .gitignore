@@ -13,3 +13,6 @@ code
 reg.dump
 *.reg.dump
 *.reg.dump.*
+
+# a standard interpreter to generate dump files
+standard

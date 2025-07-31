@@ -8,7 +8,7 @@
 namespace C = norb::riscv::constants;
 
 int main(int argc, char *argv[]) {
-    std::freopen("../testcases/array_test2.data", "r", stdin);
+    std::freopen("../testcases/gcd.data", "r", stdin);
     auto &logger = Logger::get();
 
     // Configure logger based on constants
