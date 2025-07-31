@@ -47,7 +47,7 @@ namespace norb::riscv {
         void write_and_broadcast();
         void commit();
 
-        void tidy();
+        void tick();
         void check_reset();  // Check for reset signal and handle reset
         [[nodiscard]] bool check_for_exit() const;
 

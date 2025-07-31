@@ -22,12 +22,13 @@ namespace norb::riscv {
 
     // This is the only system in the RISC-V simulator that does not follow strict latch logic
     // It is designed so for simpler interface and to let multiple dataflows through
-    class CommonDataBus {
+    class CommonDataBus: public impl::BufferedFlushInterface_ {
         std::queue<BroadcastEntry> broadcast_queue_{};
         std::queue<BroadcastEntry> changes_queue_{};
 
     public:
-        CommonDataBus() = default;
+        CommonDataBus();
+        ~CommonDataBus() override;
 
         void broadcast(const BroadcastEntry& entry);
         [[nodiscard]] bool empty() const;
@@ -35,7 +36,7 @@ namespace norb::riscv {
         [[nodiscard]] std::optional<BroadcastEntry> read_as_optional() const;
 
         // This method is called on falling edge
-        void flush();
+        void flush() override;
         void clear();
     };
 

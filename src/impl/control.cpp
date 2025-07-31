@@ -99,7 +99,7 @@ namespace norb::riscv {
 #endif
     }
 
-    void RISCV_Simulator::tidy() {
+    void RISCV_Simulator::tick() {
         if (C::peek_resolvers_after_cycle) {
             // debug each buffer
             log.as(LogLevel::INFO) << "[CONTROL] Peek RS resolver:";
@@ -109,12 +109,8 @@ namespace norb::riscv {
             log.as(LogLevel::INFO) << "[CONTROL] Peek BA resolver:";
             ba.resolver.print_content();
         }
-        // after each cycle, reset the zero register
-        reg.write(RegName::ZERO, 0x00);
         // flush the buffered values (mimicking the behavior of latches)
         buffered_flush();
-        // flush the CDB (externally managed)
-        cdb->flush();
         // advance the clock
         Clock::instance().tick();
         log.as(LogLevel::DEBUG) << "";  // new line to separate cycle
@@ -162,7 +158,7 @@ namespace norb::riscv {
     }
 
     void RISCV_Simulator::run() {
-        tidy();
+        tick();
 #ifndef NO_TIMEOUT
         int loop_counter = 0;
         for (loop_counter = 0; loop_counter < C::loop_timeout; ++loop_counter) {
@@ -184,7 +180,7 @@ namespace norb::riscv {
             issue();
 
             // tidy() must be called last (falling edge)
-            tidy();
+            tick();
 
             // check for reset signal on falling edge
             check_reset();
