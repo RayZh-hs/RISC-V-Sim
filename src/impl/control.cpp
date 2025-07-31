@@ -124,7 +124,7 @@ namespace norb::riscv {
         if (reset_data.has_value() && reset_data->reset_signal) {
             auto &log = Logger::get();
             log.as(LogLevel::INFO) << "[CONTROL] Reset detected, flushing pipeline and setting PC to: "
-                                   << reset_data->new_pc;
+                                   << norb::hex(reset_data->new_pc);
 
             buffered_flush();   // this will make sure pending actions (like JAL, JALR will still write into the register)
             // Reset all units
@@ -164,6 +164,7 @@ namespace norb::riscv {
         int loop_counter = 0;
         for (loop_counter = 0; loop_counter < C::loop_timeout; ++loop_counter) {
             // debugging info
+            log.as(LogLevel::INFO) << "Current loop cout: " << loop_counter;
             print_cdb_info();
 
             // perform a rounding of the main control loop (rising edge)

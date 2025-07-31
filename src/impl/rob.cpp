@@ -257,6 +257,7 @@ namespace norb::riscv {
                 // For JAL and JALR we will also need to write into rd
                 if (ins.header.ins_type == InsType::JAL or ins.header.ins_type == InsType::JALR) {
                     register_file.write(ins.rd, ins.pc + 4);
+                    register_file.clear_host(ins.rd);
                 }
                 break;
 
@@ -296,9 +297,18 @@ namespace norb::riscv {
     std::optional<uint32_t> ReOrderBuffer::try_resolve_in_rob(const rob_pointer_t& pointer) const {
         for (auto iter = main_buffer.begin(); iter != main_buffer.end(); ++iter) {
             const auto entry = iter.read();
-            if (entry.status == ROBEntryStatus::COMPUTED and iter == pointer) {
-                log.as(LogLevel::DEBUG) << "ROB self resolved pointer: " << pointer.repr();
-                return entry.result;
+            if (iter == pointer) {
+                if (entry.instruction.header.ins_pos == InsPos::BRANCH) {
+                    // this must be either jal or jalr
+                    assert(entry.instruction.header.ins_type == JAL or entry.instruction.header.ins_type == JALR);
+                    //! either case: rd = PC + 4
+                    const uint32_t ret = entry.instruction.pc + 4;
+                    return ret;
+                }
+                else if (entry.status == ROBEntryStatus::COMPUTED) {
+                    log.as(LogLevel::DEBUG) << "ROB self resolved pointer: " << pointer.repr() << " with value: " << entry.result;
+                    return entry.result;
+                }
             }
         }
         return std::nullopt;

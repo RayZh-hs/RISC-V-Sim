@@ -279,7 +279,7 @@ namespace norb::riscv {
     bool Instruction::is_halt() const { return raw == 0x0ff00513; }
 
     std::ostream &Instruction::operator<<(std::ostream &os) const {
-        os << "[Instruction " << norb::dump_repr(raw) << "]";
+        os << "[Instruction " << norb::dump_repr(raw) << ", pc=" << norb::hex(pc) << "]";
         return os;
     }
 
@@ -289,7 +289,7 @@ namespace norb::riscv {
     std::string Instruction::repr() const {
         return "Instruction(type=" + ins_type_names[static_cast<int>(header.ins_type)] +
             ", raw=" + norb::dump_repr(raw) + ", rd=" + std::to_string(rd) + ", rs1=" + std::to_string(rs1) +
-            ", rs2=" + std::to_string(rs2) + ", imm=" + std::to_string(imm) + ")";
+            ", rs2=" + std::to_string(rs2) + ", imm=" + std::to_string(imm) + ", pc=" + norb::hex(pc)  + ")";
     }
 
 }  // namespace norb::riscv

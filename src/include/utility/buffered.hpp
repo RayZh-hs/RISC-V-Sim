@@ -4,10 +4,12 @@
 
 #pragma once
 #include <algorithm>
+#include <iostream>
 #include <optional>
 #include <stdexcept>
 #include <vector>
-#include <iostream>
+
+#include "third_party/logger.hpp"
 
 namespace norb {
     class AssertionError final : public std::runtime_error {
@@ -63,11 +65,12 @@ namespace norb {
             }
         };
 
-    }  // namespace templating
+    }  // namespace impl
 
     // A utility class that ensures lock() is only called once per cycle
     class Lock : public impl::BufferedFlushInterface_ {
         bool value = false;
+        int last_written_after_line = 0;
 
     public:
         Lock() { impl::BufferedManager::add(this); }
@@ -76,9 +79,11 @@ namespace norb {
 
         void lock() {
             if (value) {
-                throw AssertionError("Lock violated!");
+                throw AssertionError("Lock violated! Last written before logger line: " +
+                                     std::to_string(last_written_after_line));
             }
             value = true;
+            last_written_after_line = Logger::getLineNumber();
         }
 
         void flush() override { value = false; }
@@ -96,10 +101,9 @@ namespace norb {
 
         explicit Buffered(const T& ori) : old_value(ori), new_value(ori) { impl::BufferedManager::add(this); }
 
-        // ~Buffered() override {
-        //     // std::cout << "Deallocating buffered: " << this << '\n';
-        //     // impl::BufferedManager::remove(this);
-        // }
+        ~Buffered() override {
+            impl::BufferedManager::remove(this);
+        }
 
         Buffered(const Buffered&) = delete;
         Buffered& operator=(const Buffered&) = delete;
@@ -108,7 +112,7 @@ namespace norb {
 
         T read() const { return old_value; }
 
-        void write(const T &value) {
+        void write(const T& value) {
             write_lock.lock();
             new_value = value;
         }
@@ -118,7 +122,65 @@ namespace norb {
         explicit operator T() const { return old_value; }
 
         Buffered& operator=(const T& value) {
+            write_lock.lock();
             new_value = value;
+            return *this;
+        }
+    };
+
+    // This class does not guarantee non-blocking assignment! Use with caution.
+    template <typename T>
+    class ConsciouslyBuffered : public impl::BufferedFlushInterface_ {
+    private:
+        T old_value{};
+        T new_value{};
+        bool has_been_modified = false;
+
+    public:
+        explicit ConsciouslyBuffered() { impl::BufferedManager::add(this); }
+
+        explicit ConsciouslyBuffered(const T& ori) : old_value(ori), new_value(ori) { impl::BufferedManager::add(this); }
+
+        ~ConsciouslyBuffered() override {
+            impl::BufferedManager::remove(this);
+        }
+
+        ConsciouslyBuffered(const ConsciouslyBuffered&) = delete;
+        ConsciouslyBuffered& operator=(const ConsciouslyBuffered&) = delete;
+        ConsciouslyBuffered(ConsciouslyBuffered&&) = delete;
+        ConsciouslyBuffered& operator=(ConsciouslyBuffered&&) = delete;
+
+        T read() const { return old_value; }
+
+        T read_new() const { return new_value; }
+
+        void write(const T& value) {
+            if (has_been_modified)
+                throw AssertionError("ConsciouslyBuffered write violated! Value has already been modified.");
+            new_value = value;
+            has_been_modified = true;
+        }
+
+        // allows the user to overwrite the value without checking if it has been modified
+        void overwrite(const T& value) {
+            new_value = value;
+            has_been_modified = true;
+        }
+
+        [[nodiscard]] bool is_modified() const {
+            return has_been_modified;
+        }
+
+        void flush() override {
+            old_value = new_value;
+            has_been_modified = false;
+        }
+
+        explicit operator T() const { return old_value; }
+
+        ConsciouslyBuffered& operator=(const T& value) {
+            new_value = value;
+            has_been_modified = true;
             return *this;
         }
     };
@@ -137,11 +199,9 @@ namespace norb {
         }
         ~TemporarilyBuffered() override { impl::BufferedManager::remove(this); }
 
-        auto read() const {
-            return old_value;
-        }
+        auto read() const { return old_value; }
 
-        void write(const T &value) {
+        void write(const T& value) {
             write_lock.lock();
             new_value = value;
         }

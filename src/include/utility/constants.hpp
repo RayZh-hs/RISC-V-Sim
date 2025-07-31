@@ -20,7 +20,7 @@ namespace norb::riscv::constants {
     inline constexpr int alu_calc_delay = 1;
     inline constexpr int mem_access_delay = 3;
 
-    inline constexpr int loop_timeout = 150;
+    inline constexpr int loop_timeout = 1000;
 
     constexpr bool peek_resolvers_after_cycle = true;
 

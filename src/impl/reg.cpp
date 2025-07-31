@@ -26,8 +26,7 @@ namespace norb::riscv {
     uint32_t RegisterFile::read(int index) const { return registers[index].value.read(); }
 
     void RegisterFile::write(int index, uint32_t value) {
-        if (index != 0)
-            registers[index].value.write(value);
+        if (index != 0) registers[index].value.write(value);
     }
 
     void RegisterFile::write_host(int index, const rob_pointer_t &host) {
@@ -37,8 +36,8 @@ namespace norb::riscv {
         if (index == 0) {
             return;  // Zero register does not have a host
         }
-        registers[index].host.write(host);
-        registers[index].has_host.write(true);
+        registers[index].host.overwrite(host);
+        registers[index].has_host.overwrite(true);
     }
 
     void RegisterFile::clear_host(int index) {
@@ -48,8 +47,16 @@ namespace norb::riscv {
         if (index == 0) {
             return;  // Zero register does not have a host
         }
-        registers[index].host.write(rob_nullptr);
-        registers[index].has_host.write(false);
+        if (registers[index].host.is_modified()) {
+            assert(registers[index].has_host.read_new() == true);   // must be assigned to a new host
+            auto &log = Logger::get();
+            log.as(LogLevel::WARN) << "In this cycle register x" << index << " has already been re-hosted: " <<
+                registers[index].host.read().repr() << " -> " << registers[index].host.read_new().repr();
+            // do NOT overwrite the host pointer
+        } else {
+            registers[index].host.write(rob_nullptr);
+            registers[index].has_host.write(false);
+        }
     }
 
     void RegisterFile::on_reset(const ResetData &reset_data) {

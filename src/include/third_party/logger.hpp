@@ -118,6 +118,10 @@ public:
         return instance;
     }
 
+    static int getLineNumber() {
+        return get().m_lineNumber;
+    }
+
     void setLevel(LogLevel level) {
         m_logLevel = level;
     }
@@ -152,7 +156,7 @@ private:
     friend class LogStream; // Allows LogStream to call our private write() method.
 
     // Private constructor for singleton pattern
-    Logger() : m_logLevel(LogLevel::INFO), m_colorEnabled(true) {}
+    Logger() : m_logLevel(LogLevel::INFO), m_colorEnabled(true), m_lineNumber(1) {}
 
     // Destructor to ensure the file stream is closed
     ~Logger() {
@@ -173,7 +177,8 @@ private:
 
         std::stringstream prefix_stream;
         prefix_stream << std::put_time(&tm, "%Y-%m-%d %H:%M:%S")
-                      << " [" << norb::levelToString(level) << "] ";
+                      << " [" << std::setw(4) << std::setfill('0') << m_lineNumber << "] "
+                      << "[" << norb::levelToString(level) << "] ";
 
         // Console output (with or without color)
         std::ostream& out = (level >= LogLevel::ERROR) ? std::cerr : std::cout;
@@ -189,6 +194,9 @@ private:
             *m_fileStream << prefix_stream.str() << message << std::endl;
         }
 
+        // Increment line number for next log entry
+        ++m_lineNumber;
+
         if (level == LogLevel::FATAL) {
             std::exit(EXIT_FAILURE);
         }
@@ -197,6 +205,7 @@ private:
     LogLevel m_logLevel;
     bool m_colorEnabled;
     std::unique_ptr<std::ofstream> m_fileStream;
+    int m_lineNumber;
 };
 
 inline LogStream::~LogStream() {

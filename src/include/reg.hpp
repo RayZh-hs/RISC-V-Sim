@@ -19,8 +19,8 @@ namespace norb::riscv {
 
     struct Register {
         C::b_uint32_t value;
-        Buffered<rob_pointer_t> host;
-        Buffered<bool> has_host;
+        ConsciouslyBuffered<rob_pointer_t> host;
+        ConsciouslyBuffered<bool> has_host;
 
         Register();
     };
