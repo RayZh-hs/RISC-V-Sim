@@ -94,7 +94,9 @@ namespace norb::riscv {
     void RISCV_Simulator::commit() {
         rob.on_commit();
         lsb.on_commit();
+#ifndef NO_LOGGING
         reg.print_state();
+#endif
     }
 
     void RISCV_Simulator::tidy() {
@@ -161,11 +163,18 @@ namespace norb::riscv {
 
     void RISCV_Simulator::run() {
         tidy();
+#ifndef NO_TIMEOUT
         int loop_counter = 0;
         for (loop_counter = 0; loop_counter < C::loop_timeout; ++loop_counter) {
             // debugging info
             log.as(LogLevel::INFO) << "Current loop cout: " << loop_counter;
+#else
+        while (true) {
+#endif
+
+#ifndef NO_LOGGING
             print_cdb_info();
+#endif
 
             // perform a rounding of the main control loop (rising edge)
             execute();
@@ -185,9 +194,11 @@ namespace norb::riscv {
                 break;
             }
         }
+#ifndef NO_TIMEOUT
         if (loop_counter >= C::loop_timeout) {
             log.as(LogLevel::FATAL) << "Loop count exceeded upperbound: " << C::loop_timeout;
         }
+#endif
         print_result();
     }
 

@@ -94,7 +94,9 @@ namespace norb {
     private:
         T old_value{};
         T new_value{};
+#ifndef NO_RUNTIME_CHECKS
         Lock write_lock{};
+#endif
 
     public:
         explicit Buffered() { impl::BufferedManager::add(this); }
@@ -113,7 +115,9 @@ namespace norb {
         T read() const { return old_value; }
 
         void write(const T& value) {
+#ifndef NO_RUNTIME_CHECKS
             write_lock.lock();
+#endif
             new_value = value;
         }
 
@@ -122,7 +126,9 @@ namespace norb {
         explicit operator T() const { return old_value; }
 
         Buffered& operator=(const T& value) {
+#ifndef NO_RUNTIME_CHECKS
             write_lock.lock();
+#endif
             new_value = value;
             return *this;
         }
@@ -190,7 +196,9 @@ namespace norb {
     private:
         std::optional<T> old_value = std::nullopt;
         std::optional<T> new_value = std::nullopt;
+#ifndef NO_RUNTIME_CHECKS
         Lock write_lock;
+#endif
 
     public:
         explicit TemporarilyBuffered() { impl::BufferedManager::add(this); }
@@ -202,7 +210,9 @@ namespace norb {
         auto read() const { return old_value; }
 
         void write(const T& value) {
+#ifndef NO_RUNTIME_CHECKS
             write_lock.lock();
+#endif
             new_value = value;
         }
 

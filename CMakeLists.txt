@@ -12,6 +12,7 @@ file(GLOB IMPL_SOURCES src/impl/*.cpp)
 # add_executable(simulator src/main.cpp ${IMPL_SOURCES})
 add_executable(code src/main.cpp ${IMPL_SOURCES})
 set_target_properties(code PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
+target_compile_definitions(code PRIVATE NO_LOGGING NO_TIMEOUT NO_RUNTIME_CHECKS)
 #add_executable(redirected_sim src/redirected_main.cpp ${IMPL_SOURCES})
 
 # Custom unit tests
