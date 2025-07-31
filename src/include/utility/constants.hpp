@@ -24,11 +24,11 @@ namespace norb::riscv::constants {
     inline constexpr int loop_timeout = 1000;
 
     inline constexpr bool peek_resolvers_after_cycle = false;
-    inline constexpr bool dump_registers_after_commit = true;
+    inline constexpr bool dump_registers_after_commit = false;
     inline const std::string dump_registers_at_file_path = "reg.dump";
 
     inline const std::string log_file{};  // empty for no log dump
-    inline constexpr auto log_level = LogLevel::DEBUG;
+    inline constexpr auto log_level = LogLevel::INFO;
 
     using b_uint8_t = Buffered<uint8_t>;
     using b_uint16_t = Buffered<uint16_t>;

@@ -33,7 +33,7 @@ namespace norb::riscv {
         [[nodiscard]] uint32_t read(int index) const;
         void write(int index, uint32_t value);
         void write_host(int index, const rob_pointer_t &host);
-        void clear_host(int index);
+        void clear_host(int index, const rob_pointer_t &host);
         
         // Implement Resettable interface
         void on_reset(const ResetData& reset_data) override;

@@ -126,7 +126,7 @@ namespace norb::riscv {
             log.as(LogLevel::INFO) << "[CONTROL] Reset detected, flushing pipeline and setting PC to: "
                                    << norb::hex(reset_data->new_pc);
 
-            buffered_flush();   // this will make sure pending actions (like JAL, JALR will still write into the register)
+            buffered_flush();   // this will make sure pending actions (like JAL, JALR will still write into the register
             // Reset all units
             pc.on_reset(reset_data.value());
             reg.on_reset(reset_data.value());

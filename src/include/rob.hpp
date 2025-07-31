@@ -52,7 +52,7 @@ namespace norb::riscv {
         // In the cpu, only rob has write access to the register file
         // Therefore, we can assume they are tightly coupled
         explicit ReOrderBuffer(RegisterFile &rf, const std::shared_ptr<CommonDataBus> &cdb_ref) :
-            register_file(rf), cdb_ref(cdb_ref), reg_dumper(C::dump_registers_at_file_path) {}
+            register_file(rf), cdb_ref(cdb_ref), reg_dumper(C::dump_registers_at_file_path, C::dump_registers_after_commit) {}
 
         [[nodiscard]] bool full() const;
         [[nodiscard]] bool almost_full() const;

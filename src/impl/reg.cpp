@@ -40,18 +40,24 @@ namespace norb::riscv {
         registers[index].has_host.overwrite(true);
     }
 
-    void RegisterFile::clear_host(int index) {
+    void RegisterFile::clear_host(int index, const rob_pointer_t &host) {
         if (index < 0 or index >= C::register_file_size) {
             throw std::out_of_range("RegisterFile::write_host out of range");
         }
         if (index == 0) {
             return;  // Zero register does not have a host
         }
+        auto &log = Logger::get();
+        if (registers[index].has_host.read() and registers[index].host.read() != host) {
+            log.as(LogLevel::WARN) << "Should not clear host for register x" << index << " with host " << host.repr()
+                                   << ", current host is " << registers[index].host.read().repr();
+            return;
+        }
         if (registers[index].host.is_modified()) {
-            assert(registers[index].has_host.read_new() == true);   // must be assigned to a new host
-            auto &log = Logger::get();
-            log.as(LogLevel::WARN) << "In this cycle register x" << index << " has already been re-hosted: " <<
-                registers[index].host.read().repr() << " -> " << registers[index].host.read_new().repr();
+            assert(registers[index].has_host.read_new() == true);  // must be assigned to a new host
+            log.as(LogLevel::WARN) << "In this cycle register x" << index
+                                   << " has already been re-hosted: " << registers[index].host.read().repr() << " -> "
+                                   << registers[index].host.read_new().repr();
             // do NOT overwrite the host pointer
         } else {
             registers[index].host.write(rob_nullptr);

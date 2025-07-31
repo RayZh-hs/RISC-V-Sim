@@ -3,6 +3,7 @@
 
 #include "lsb.hpp"
 
+#include "utility/dump.hpp"
 #include "utility/extend.hpp"
 
 namespace norb::riscv {
@@ -106,7 +107,8 @@ namespace norb::riscv {
                         // the broadcast here is not necessary (return type void)
                         // submit is only intended for clearing the buffer
                         log.as(LogLevel::DEBUG)
-                            << "[LSB] Storing byte: addr=" << addr << ", value=" << static_cast<int>(byte_val);
+                            << "[LSB] Storing byte: addr=" << addr << ", value=" << static_cast<int>(byte_val)
+                            << " for instruction pc=" << norb::hex(entry.pc);
                         resolver.submit_executed_entry(entry.rob_pointer, 0);
                         break;
                     }
@@ -123,8 +125,8 @@ namespace norb::riscv {
                         modification_blame.insert({entry.rob_pointer, addr});
                         modification_blame.insert({entry.rob_pointer, addr + 1});
 
-                        log.as(LogLevel::DEBUG)
-                            << "[LSB] Storing halfword: addr=" << addr << ", value=" << halfword_val;
+                        log.as(LogLevel::DEBUG) << "[LSB] Storing halfword: addr=" << addr << ", value=" << halfword_val
+                                                << " for instruction pc=" << norb::hex(entry.pc);
                         resolver.submit_executed_entry(entry.rob_pointer, 0);
                         break;
                     }
@@ -144,7 +146,8 @@ namespace norb::riscv {
                         modification_blame.insert({entry.rob_pointer, addr + 2});
                         modification_blame.insert({entry.rob_pointer, addr + 3});
 
-                        log.as(LogLevel::DEBUG) << "[LSB] Storing word: addr=" << addr << ", value=" << word_val;
+                        log.as(LogLevel::DEBUG) << "[LSB] Storing word: addr=" << addr << ", value=" << word_val
+                                                << " for instruction pc=" << norb::hex(entry.pc);
                         resolver.submit_executed_entry(entry.rob_pointer, 0);
                         break;
                     }

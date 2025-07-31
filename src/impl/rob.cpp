@@ -207,6 +207,7 @@ namespace norb::riscv {
         // commit the first entry
         auto &ins = front.instruction;
         const uint32_t result = front.result;
+        const auto front_iter = main_buffer.begin();
 
         log.as(LogLevel::DEBUG) << "[ROB] Committing instruction: " << ins << " with result: " << result;
 
@@ -224,7 +225,7 @@ namespace norb::riscv {
                 if (ins.rd != 0) {
                     register_file.write(ins.rd, result);
                     // Clear the host dependency since we're committing
-                    register_file.clear_host(ins.rd);
+                    register_file.clear_host(ins.rd, front_iter);
                 }
                 break;
 
@@ -235,7 +236,7 @@ namespace norb::riscv {
                     // Load instruction - write to register
                     if (ins.rd != 0) {
                         register_file.write(ins.rd, result);
-                        register_file.clear_host(ins.rd);
+                        register_file.clear_host(ins.rd, front_iter);
                     }
                 } else {
                     // Store instruction - notify LSB via bus
@@ -257,7 +258,7 @@ namespace norb::riscv {
                 // For JAL and JALR we will also need to write into rd
                 if (ins.header.ins_type == InsType::JAL or ins.header.ins_type == InsType::JALR) {
                     register_file.write(ins.rd, ins.pc + 4);
-                    register_file.clear_host(ins.rd);
+                    register_file.clear_host(ins.rd, front_iter);
                 }
                 break;
 
