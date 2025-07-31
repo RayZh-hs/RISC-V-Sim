@@ -16,12 +16,15 @@ namespace norb {
     private:
         std::ofstream file_;
         int line_number_;
+        bool enabled_ = false;  // Flag to disable dumping
 
     public:
-        RegisterDumper(const std::string &filename) : line_number_(0) {
+        RegisterDumper(const std::string &filename, bool enabled = true) : line_number_(0), enabled_(enabled) {
             // Clear the file at bootup and keep it open
+            if (filename.empty()) return;
+            if (not enabled_) return;  // If dumping is disabled, do not create the file
             file_.open(filename, std::ios::trunc);
-            if (!file_.is_open()) {
+            if (not file_.is_open()) {
                 throw std::runtime_error("Failed to open file for register dumping: " + filename);
             }
         }
@@ -38,6 +41,8 @@ namespace norb {
 
     private:
         void dump_impl(uint32_t pc_at_commit, const std::array<RegType_, reg_count_> &reg_snapshot) {
+            if (not enabled_) return;
+            if (not file_.is_open()) return;  // do nothing (empty filename)
             std::ostringstream oss;
             oss << "[" << norb::pad_with_zero(++line_number_, 4) << "] ";  // line number for each line
             oss << norb::hex(pc_at_commit) << " | ";  // PC at commit

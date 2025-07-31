@@ -1,6 +1,7 @@
 docs
 testcases/*
 sample/*
+dumps
 
 .idea
 .vscode
