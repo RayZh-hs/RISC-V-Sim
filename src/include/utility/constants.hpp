@@ -21,7 +21,7 @@ namespace norb::riscv::constants {
     inline constexpr int alu_calc_delay = 1;
     inline constexpr int mem_access_delay = 3;
 
-    inline constexpr int loop_timeout = 1000;
+    inline constexpr int loop_timeout = 10000000;
 
     inline constexpr bool peek_resolvers_after_cycle = false;
     inline constexpr bool dump_registers_after_commit = false;

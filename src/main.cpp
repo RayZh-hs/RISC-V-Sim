@@ -14,7 +14,7 @@ int main(int argc, char *argv[]) {
     if (not C::log_file.empty()) {
         logger.setFileOutput(C::log_file);
     }
-    logger.setLevel(C::log_level);
+    logger.setLevel(LogLevel::FATAL);
 
     norb::riscv::RISCV_Simulator simulator;
     simulator.boot();
