@@ -5,6 +5,7 @@
 #include <cstdint>
 
 #include "buffered.hpp"
+#include "third_party/logger.hpp"
 
 namespace norb::riscv::constants {
     inline constexpr int register_file_size = 32;
@@ -25,6 +26,9 @@ namespace norb::riscv::constants {
     inline constexpr bool peek_resolvers_after_cycle = false;
     inline constexpr bool dump_registers_after_commit = true;
     inline const std::string dump_registers_at_file_path = "reg.dump";
+
+    inline const std::string log_file{};  // empty for no log dump
+    inline constexpr auto log_level = LogLevel::DEBUG;
 
     using b_uint8_t = Buffered<uint8_t>;
     using b_uint16_t = Buffered<uint16_t>;

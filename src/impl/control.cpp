@@ -152,11 +152,11 @@ namespace norb::riscv {
 
     bool RISCV_Simulator::check_for_exit() const { return bus_rob_has_committed_exit.read(); }
 
-    void RISCV_Simulator::boot(const std::string &mem_path) {
+    void RISCV_Simulator::boot() {
         Clock::instance().reset();
         auto &log = Logger::get();
-        log.as(LogLevel::INFO) << "Booting RISC-V system with memory mirror: " << mem_path;
-        lsb.load_memory(mem_path);
+        log.as(LogLevel::INFO) << "Booting RISC-V system, reading memory from stdin";
+        lsb.load_memory_from_stdin();
     }
 
     void RISCV_Simulator::run() {

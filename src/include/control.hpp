@@ -59,7 +59,7 @@ namespace norb::riscv {
             connect_channels();
         }
 
-        void boot(const std::string &mem_path);
+        void boot();
         void run();
     };
 }  // namespace norb::riscv

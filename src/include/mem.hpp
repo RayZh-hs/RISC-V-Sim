@@ -61,12 +61,20 @@ namespace norb::riscv {
     }  // namespace impl
 
     class Memory {
-        std::array<uint8_t, C::memory_size> memory;
+        std::array<uint8_t, C::memory_size> memory{};
 
     public:
         explicit Memory(const std::string& path) {
             std::ifstream file(path);
+            if (!file.is_open()) {
+                throw std::runtime_error("Failed to open memory file: " + path);
+            }
             impl::memory_decode(memory, file);
+        }
+
+        // Constructor to read from stdin
+        explicit Memory() {
+            impl::memory_decode(memory, std::cin);
         }
 
         // read 4 bytes of data from the memory, in Little Endian

@@ -9,6 +9,8 @@ namespace norb::riscv {
 
     void LoadStoreBuffer::load_memory(const std::string& mem_path) { memory = std::make_unique<Memory>(mem_path); }
 
+    void LoadStoreBuffer::load_memory_from_stdin() { memory = std::make_unique<Memory>(); }
+
     void LoadStoreBuffer::set_commit_bus(TemporaryBus<rob_pointer_t>& bus) { bus_rob_commit.connect(bus); }
 
     // Auxiliary function to read a single byte, checking modification_list first

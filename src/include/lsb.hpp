@@ -31,6 +31,7 @@ namespace norb::riscv {
         ~LoadStoreBuffer() override = default;
 
         void load_memory(const std::string& mem_path);
+        void load_memory_from_stdin();
         void set_commit_bus(TemporaryBus<rob_pointer_t> &bus);
 
         // This theoretically should depend on the underlying instruction buffer for faster fetch

@@ -7,3 +7,9 @@ dumps
 .vscode
 build
 cmake-build-debug
+
+code
+# variations of register dump files
+reg.dump
+*.reg.dump
+*.reg.dump.*
