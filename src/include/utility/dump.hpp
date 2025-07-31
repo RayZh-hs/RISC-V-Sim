@@ -20,4 +20,10 @@ namespace norb {
     inline std::string dump_repr(uint32_t x) {
         return std::to_string(x) + " (" + hex(x) + ", " + bin(x) + ")";
     }
+
+    inline std::string pad_with_zero(uint32_t x, int width = 4) {
+        std::ostringstream oss;
+        oss << std::setfill('0') << std::setw(width) << x;
+        return oss.str();
+    }
 }  // namespace norb

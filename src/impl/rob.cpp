@@ -271,6 +271,12 @@ namespace norb::riscv {
         main_buffer.pop();
         resolver_buffer.pop();
 
+        // dump the new committed state of the register file
+        if (C::dump_registers_after_commit) {
+            const auto new_regs = register_file.dump_as_array();
+            reg_dumper.dump(ins.pc, new_regs);
+        }
+
         log.as(LogLevel::INFO) << "[ROB] Successfully committed instruction: " << ins;
     }
 
@@ -294,7 +300,7 @@ namespace norb::riscv {
         }
     }
 
-    std::optional<uint32_t> ReOrderBuffer::try_resolve_in_rob(const rob_pointer_t& pointer) const {
+    std::optional<uint32_t> ReOrderBuffer::try_resolve_in_rob(const rob_pointer_t &pointer) const {
         for (auto iter = main_buffer.begin(); iter != main_buffer.end(); ++iter) {
             const auto entry = iter.read();
             if (iter == pointer) {
@@ -304,9 +310,9 @@ namespace norb::riscv {
                     //! either case: rd = PC + 4
                     const uint32_t ret = entry.instruction.pc + 4;
                     return ret;
-                }
-                else if (entry.status == ROBEntryStatus::COMPUTED) {
-                    log.as(LogLevel::DEBUG) << "ROB self resolved pointer: " << pointer.repr() << " with value: " << entry.result;
+                } else if (entry.status == ROBEntryStatus::COMPUTED) {
+                    log.as(LogLevel::DEBUG)
+                        << "ROB self resolved pointer: " << pointer.repr() << " with value: " << entry.result;
                     return entry.result;
                 }
             }

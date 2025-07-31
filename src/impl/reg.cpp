@@ -84,4 +84,11 @@ namespace norb::riscv {
         log.as(LogLevel::DEBUG) << s;
     }
 
+    std::array<uint32_t, C::register_file_size> RegisterFile::dump_as_array() const {
+        std::array<uint32_t, C::register_file_size> ret{};
+        for (int i = 0; i < C::register_file_size; ++i) {
+            ret[i] = registers[i].value.read_new();
+        }
+        return ret;
+    }
 }  // namespace norb::riscv

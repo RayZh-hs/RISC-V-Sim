@@ -18,7 +18,7 @@ namespace norb::riscv {
     };
 
     struct Register {
-        C::b_uint32_t value;
+        ConsciouslyBuffered<uint32_t> value;
         ConsciouslyBuffered<rob_pointer_t> host;
         ConsciouslyBuffered<bool> has_host;
 
@@ -39,6 +39,9 @@ namespace norb::riscv {
         void on_reset(const ResetData& reset_data) override;
 
         void print_state();
+
+        // dumps the NEW values of the registers as an array (debug hack)
+        [[nodiscard]] std::array<uint32_t, C::register_file_size> dump_as_array() const;
     };
 
 }  // namespace norb::riscv

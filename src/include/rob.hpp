@@ -11,6 +11,7 @@
 #include "utility/bus.hpp"
 #include "utility/chan.hpp"
 #include "utility/constants.hpp"
+#include "utility/reg_dump.hpp"
 
 namespace C = norb::riscv::constants;
 
@@ -35,6 +36,9 @@ namespace norb::riscv {
         // - reset bus
         TemporaryBus<ResetData> bus_rst;
 
+        // - register dumper
+        RegisterDumper<C::register_file_size> reg_dumper;
+
     private:
         rob_main_buffer_t main_buffer;
         rob_resolver_buffer_t resolver_buffer;
@@ -48,7 +52,7 @@ namespace norb::riscv {
         // In the cpu, only rob has write access to the register file
         // Therefore, we can assume they are tightly coupled
         explicit ReOrderBuffer(RegisterFile &rf, const std::shared_ptr<CommonDataBus> &cdb_ref) :
-            register_file(rf), cdb_ref(cdb_ref) {}
+            register_file(rf), cdb_ref(cdb_ref), reg_dumper(C::dump_registers_at_file_path) {}
 
         [[nodiscard]] bool full() const;
         [[nodiscard]] bool almost_full() const;
