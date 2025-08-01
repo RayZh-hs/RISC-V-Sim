@@ -17,9 +17,10 @@ namespace C = norb::riscv::constants;
 namespace norb::riscv {
     class InstructionFetchModule : public Resettable {
         ProgramCounter pc;
-        BranchPredictor predictor;
+        TwoBitBranchPredictor predictor;
         std::shared_ptr<Memory> rom;  // Instruction ROM for fast instruction fetching
         ChannelWriter<Instruction> chan_ifm_rob_next_instruction;
+        ChannelReader<BranchPredictionFeedback> chan_ba_ifm_branch_info;
         Logger &log = Logger::get();
 
         [[nodiscard]] uint32_t get_instruction() const;
@@ -30,9 +31,11 @@ namespace norb::riscv {
         ~InstructionFetchModule() override = default;
 
         void bind_outbound_to(norb::ChannelReader<Instruction> &chr);
+        void bind_branch_info_inbound_to(norb::ChannelWriter<BranchPredictionFeedback> &chw);
         void import_instruction_memory(std::shared_ptr<Memory> instructions);
 
         void on_fetch();
+        void on_broadcast();
         void on_reset(const ResetData &reset_data) override;
     };
 }  // namespace norb::riscv

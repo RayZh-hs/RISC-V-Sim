@@ -13,6 +13,10 @@ namespace norb::riscv {
         make_channel(chan_ifm_rob_next_instruction, chr);
     }
 
+    void InstructionFetchModule::bind_branch_info_inbound_to(norb::ChannelWriter<BranchPredictionFeedback>& chw) {
+        norb::make_channel(chw, chan_ba_ifm_branch_info);
+    }
+
     void InstructionFetchModule::import_instruction_memory(std::shared_ptr<Memory> instructions) {
         rom = std::move(instructions);
     }
@@ -24,9 +28,9 @@ namespace norb::riscv {
             Instruction ins = noop;
             try {
                 ins = Instruction::from(raw_ins);
-                log.as(LogLevel::DEBUG) << "[CONTROL] Fetched instruction: " << ins.repr();
+                log.as(LogLevel::DEBUG) << "[IFM] Fetched instruction: " << ins.repr();
             } catch (...) {
-                log.as(LogLevel::WARN) << "[CONTROL] Malformed instruction: Cannot decode raw_ins=" << raw_ins;
+                log.as(LogLevel::WARN) << "[IFM] Malformed instruction: Cannot decode raw_ins=" << raw_ins;
             }
             // ask the branch analyzer to predict the pc
             // it should return pc + 4 if ins is not a branch instruction
@@ -44,6 +48,13 @@ namespace norb::riscv {
         }
     }
 
+    void InstructionFetchModule::on_broadcast() {
+        if (chan_ba_ifm_branch_info.has_data()) {
+            const auto branch_feedback = chan_ba_ifm_branch_info.read();
+            log.as(LogLevel::DEBUG) << "[IFM] Submitting branch feedback: " << branch_feedback.repr();
+            predictor.update(branch_feedback);
+        }
+    }
 
     void InstructionFetchModule::on_reset(const ResetData& reset_data) {
         pc.on_reset(reset_data);

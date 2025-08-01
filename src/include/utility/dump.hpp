@@ -7,6 +7,7 @@
 #include <iomanip>
 #include <sstream>
 #include <string>
+#include <cstdint>
 
 namespace norb {
     inline std::string hex(uint32_t x) {
@@ -25,5 +26,9 @@ namespace norb {
         std::ostringstream oss;
         oss << std::setfill('0') << std::setw(width) << x;
         return oss.str();
+    }
+
+    inline std::string btos(bool x) {
+        return x ? "true" : "false";
     }
 }  // namespace norb

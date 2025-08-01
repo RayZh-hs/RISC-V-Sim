@@ -18,6 +18,7 @@ namespace norb::riscv {
 
     void RISCV_Simulator::connect_channels() {
         ifm.bind_outbound_to(rob.chan_ifm_rob_next_instruction);
+        ifm.bind_branch_info_inbound_to(ba.chan_ba_ifm_branch_info);
         rs.resolver.bind_inbound_to(rob.chan_rob_rs_next_instruction);
         lsb.resolver.bind_inbound_to(rob.chan_rob_lsb_next_instruction);
         ba.resolver.bind_inbound_to(rob.chan_rob_ba_next_instruction);
@@ -67,6 +68,7 @@ namespace norb::riscv {
         rs.on_broadcast();
         lsb.on_broadcast();
         ba.on_broadcast();
+        ifm.on_broadcast();
     }
 
     void RISCV_Simulator::commit() {

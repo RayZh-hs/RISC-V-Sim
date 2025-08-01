@@ -28,8 +28,11 @@ namespace norb::riscv {
             if (to_broadcast.has_value()) {
                 const bool real_jump = utils::should_jump(to_broadcast.value());
                 const bool had_jumped = to_broadcast->had_jumped;
-                // predictor.move_state(real_jump);  // update the predictor state
-                // todo migrate
+                const auto branch_info = BranchPredictionFeedback(to_broadcast->pc, real_jump, had_jumped);
+                if (not chan_ba_ifm_branch_info.has_data()) {
+                    // send to predictor
+                    chan_ba_ifm_branch_info.write(branch_info);
+                }
                 logger.as(LogLevel::INFO) << "[BA] Resolved jump: Jump(pc=" << to_broadcast->pc
                                           << ", type=" << ins_type_names[static_cast<int>(to_broadcast->type)]
                                           << ", real_jump=" << real_jump << ", had_jumped=" << had_jumped << ")";

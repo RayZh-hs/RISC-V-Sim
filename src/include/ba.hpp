@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "bp.hpp"
 #include "decoder.hpp"
 #include "dep.hpp"
 #include "reset.hpp"
@@ -16,6 +17,7 @@ namespace norb::riscv {
 
     public:
         SequentialDependencyResolver<C::branch_analyzer_size> resolver;
+        ChannelWriter<BranchPredictionFeedback> chan_ba_ifm_branch_info;
 
         [[nodiscard]] uint32_t predict_pc(uint32_t pc, const Instruction &ins) const;
         void on_issue();

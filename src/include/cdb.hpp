@@ -3,10 +3,12 @@
 
 #pragma once
 
-#include <queue>
 #include <cstdint>
+#include <queue>
+
 #include "rob_types.hpp"
 #include "third_party/logger.hpp"
+#include "utility/buffered.hpp"
 
 namespace norb::riscv {
 
@@ -22,7 +24,7 @@ namespace norb::riscv {
 
     // This is the only system in the RISC-V simulator that does not follow strict latch logic
     // It is designed so for simpler interface and to let multiple dataflows through
-    class CommonDataBus: public impl::BufferedFlushInterface_ {
+    class CommonDataBus : public norb::impl::BufferedFlushInterface_ {
         std::queue<BroadcastEntry> broadcast_queue_{};
         std::queue<BroadcastEntry> changes_queue_{};
 
@@ -30,7 +32,7 @@ namespace norb::riscv {
         CommonDataBus();
         ~CommonDataBus() override;
 
-        void broadcast(const BroadcastEntry& entry);
+        void broadcast(const BroadcastEntry &entry);
         [[nodiscard]] bool empty() const;
         [[nodiscard]] BroadcastEntry read() const;
         [[nodiscard]] std::optional<BroadcastEntry> read_as_optional() const;
