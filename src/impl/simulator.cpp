@@ -1,7 +1,7 @@
-// control.cpp
+// simulator.cpp
 // - implements entrypoint-level control functions for the entire risc-v system
 
-#include "control.hpp"
+#include "simulator.hpp"
 
 #include <utility/dump.hpp>
 
@@ -17,7 +17,7 @@ namespace norb::riscv {
     }
 
     void RISCV_Simulator::connect_channels() {
-        make_channel(chan_con_rob_next_instruction, rob.chan_con_rob_next_instruction);
+        ifm.bind_outbound_to(rob.chan_ifm_rob_next_instruction);
         rs.resolver.bind_inbound_to(rob.chan_rob_rs_next_instruction);
         lsb.resolver.bind_inbound_to(rob.chan_rob_lsb_next_instruction);
         ba.resolver.bind_inbound_to(rob.chan_rob_ba_next_instruction);
@@ -45,30 +45,8 @@ namespace norb::riscv {
     }
 
     void RISCV_Simulator::instruction_fetch() {
-        if (!chan_con_rob_next_instruction.has_data()) {
-            // we can write into it
-            const uint32_t raw_ins = lsb.get_instruction(pc.read());
-            Instruction ins = noop;
-            try {
-                ins = Instruction::from(raw_ins);
-                log.as(LogLevel::DEBUG) << "[CONTROL] Fetched instruction: " << ins.repr();
-            } catch (...) {
-                log.as(LogLevel::WARN) << "[CONTROL] Malformed instruction: Cannot decode raw_ins=" << raw_ins;
-            }
-            // ask the branch analyzer to predict the pc
-            // it should return pc + 4 if ins is not a branch instruction
-            const auto predicted_pc = ba.predict_pc(pc.read(), ins);
-            pc.write(predicted_pc);
-            ins.had_jumped = (predicted_pc != pc.read() + 4);  // if imm == 4 this cannot be wrongly predicted
-            ins.pc = pc.read();
-            log.as(LogLevel::DEBUG) << "Current pc: " << norb::hex(pc.read()) << ", Predicted pc: " << norb::hex(predicted_pc);
-            // now the instruction forwarded to the BA by ROB will have been tagged to ensure correct rollback
-            if (ins.header.ins_type != NOOP)
-                chan_con_rob_next_instruction.write(ins);
-            else
-                log.as(LogLevel::DEBUG) << "Skipping NOOP";
-        }
-        rob.instruction_fetch();
+        ifm.on_fetch();
+        rob.on_fetch();
     }
 
     void RISCV_Simulator::issue() {
@@ -126,7 +104,7 @@ namespace norb::riscv {
 
             buffered_flush();   // this will make sure pending actions (like JAL, JALR will still write into the register
             // Reset all units
-            pc.on_reset(reset_data.value());
+            ifm.on_reset(reset_data.value());
             reg.on_reset(reset_data.value());
             rob.on_reset(reset_data.value());
             rs.on_reset(reset_data.value());
@@ -140,9 +118,6 @@ namespace norb::riscv {
             bus_rst.clear();
             bus_rob_has_committed_exit.clear();
 
-            // Clear channel states by manually flushing
-            chan_con_rob_next_instruction.clear();
-
             buffered_flush();
             log.as(LogLevel::INFO) << "[CONTROL] Reset completed, system ready";
         }
@@ -155,6 +130,8 @@ namespace norb::riscv {
         auto &log = Logger::get();
         log.as(LogLevel::INFO) << "Booting RISC-V system, reading memory from stdin";
         lsb.load_memory_from_stdin();
+        const auto instructions = lsb.export_instruction_memory();
+        ifm.import_instruction_memory(instructions);
     }
 
     void RISCV_Simulator::run() {

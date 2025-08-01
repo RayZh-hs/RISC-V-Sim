@@ -14,7 +14,7 @@ namespace norb::riscv {
     class LoadStoreBuffer : public Resettable {
     private:
         Delayer<ResolvedInstructionEntry, C::mem_access_delay, C::load_store_buffer_size> delayer;
-        std::unique_ptr<Memory> memory = nullptr;
+        std::shared_ptr<Memory> memory = nullptr;
         TemporaryBus<rob_pointer_t> bus_rob_commit;
         Logger &log = Logger::get();
 
@@ -34,9 +34,6 @@ namespace norb::riscv {
         void load_memory_from_stdin();
         void set_commit_bus(TemporaryBus<rob_pointer_t> &bus);
 
-        // This theoretically should depend on the underlying instruction buffer for faster fetch
-        [[nodiscard]] uint32_t get_instruction(uint32_t index) const;
-
         void on_issue();
 
         void on_execute();
@@ -47,5 +44,7 @@ namespace norb::riscv {
         
         // Implement Resettable interface
         void on_reset(const ResetData& reset_data) override;
+
+        std::shared_ptr<Memory> export_instruction_memory() const;
     };
 }  // namespace norb::riscv

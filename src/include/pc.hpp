@@ -10,6 +10,48 @@ namespace C = norb::riscv::constants;
 
 namespace norb::riscv
 {
+    // pc-related utils
+    namespace utils {
+        inline bool should_jump(const ResolvedInstructionEntry &entry) {
+            switch (entry.type) {
+                // Conditional branches
+                case InsType::BEQ:
+                    return entry.vj == entry.vk;
+                case InsType::BNE:
+                    return entry.vj != entry.vk;
+                case InsType::BLT:
+                    return static_cast<int32_t>(entry.vj) < static_cast<int32_t>(entry.vk);
+                case InsType::BGE:
+                    return static_cast<int32_t>(entry.vj) >= static_cast<int32_t>(entry.vk);
+                case InsType::BLTU:
+                    return entry.vj < entry.vk;
+                case InsType::BGEU:
+                    return entry.vj >= entry.vk;
+
+                // Unconditional jumps
+                case InsType::JAL:
+                case InsType::JALR:
+                    return true;
+
+                default:
+                    throw std::runtime_error("Unsupported instruction type for branching: " +
+                                             ins_type_names[static_cast<int>(entry.type)]);
+            }
+        }
+
+        inline uint32_t calc_pc(uint32_t pc, const ResolvedInstructionEntry &entry) {
+            if (should_jump(entry)) {
+                if (entry.type == InsType::JALR) {
+                    // PC = rs1 + imm
+                    return entry.vj + entry.imm;
+                }
+                return pc + entry.imm;  // Jump to target address
+            } else {
+                return pc + 4;  // Continue to next instruction
+            }
+        }
+    }
+
     class ProgramCounter : public Resettable {
         C::b_uint32_t val;
 

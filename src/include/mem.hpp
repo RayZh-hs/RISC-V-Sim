@@ -4,10 +4,10 @@
 #pragma once
 
 #include <array>
+#include <cstdint>
 #include <dep.hpp>
 #include <fstream>
 #include <sstream>
-#include <cstdint>
 
 #include "utility/constants.hpp"
 
@@ -73,9 +73,7 @@ namespace norb::riscv {
         }
 
         // Constructor to read from stdin
-        explicit Memory() {
-            impl::memory_decode(memory, std::cin);
-        }
+        explicit Memory() { impl::memory_decode(memory, std::cin); }
 
         // read 4 bytes of data from the memory, in Little Endian
         [[nodiscard]] uint32_t read_word(uint32_t index) const {
@@ -83,8 +81,7 @@ namespace norb::riscv {
                 throw std::out_of_range("Memory read out of bounds at index: " + std::to_string(index));
             }
             // both | and + work here
-            return (memory[index] | (memory[index + 1] << 8) | (memory[index + 2] << 16) |
-                    (memory[index + 3] << 24));
+            return (memory[index] | (memory[index + 1] << 8) | (memory[index + 2] << 16) | (memory[index + 3] << 24));
         }
 
         [[nodiscard]] uint8_t read_byte(uint32_t index) const {

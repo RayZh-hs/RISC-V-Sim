@@ -18,15 +18,15 @@ namespace norb::riscv {
 
     bool ReOrderBuffer::empty() const { return main_buffer.empty(); }
 
-    void ReOrderBuffer::instruction_fetch() {
+    void ReOrderBuffer::on_fetch() {
         if (main_buffer.full()) {
             // do not read. this will automatically cause the channel to shut down on the other side
             return;
         }
         auto &log = Logger::get();
-        if (chan_con_rob_next_instruction.has_data()) {
+        if (chan_ifm_rob_next_instruction.has_data()) {
             // get the latest instruction from the bus and write it to the buffer
-            Instruction ins = chan_con_rob_next_instruction.read();
+            Instruction ins = chan_ifm_rob_next_instruction.read();
             main_buffer.emplace_back(ins, ROBEntryStatus::READY, 0);
             // Here the emplace back will take effect on the next cycle, so end() still points to the old end
             const auto it = main_buffer.end();

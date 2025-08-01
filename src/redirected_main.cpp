@@ -2,13 +2,13 @@
 // - for debugging purposes: redirect input from a file
 
 #include "third_party/logger.hpp"
-#include "control.hpp"
+#include "simulator.hpp"
 #include "utility/constants.hpp"
 
 namespace C = norb::riscv::constants;
 
 int main(int argc, char *argv[]) {
-    std::freopen("../testcases/gcd.data", "r", stdin);
+    std::freopen("../testcases/hanoi.data", "r", stdin);
     auto &logger = Logger::get();
 
     // Configure logger based on constants

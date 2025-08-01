@@ -26,13 +26,6 @@ namespace norb::riscv {
         }
     }
 
-    uint32_t LoadStoreBuffer::get_instruction(uint32_t index) const {
-        if (!memory) {
-            throw std::runtime_error("Memory not loaded.");
-        }
-        return memory->read_word(index);
-    }
-
     void LoadStoreBuffer::on_issue() { resolver.listen_inbound(); }
 
     void LoadStoreBuffer::on_execute() {
@@ -207,6 +200,13 @@ namespace norb::riscv {
 
             log.as(LogLevel::INFO) << "[LSB] Reset completed, all buffers cleared";
         }
+    }
+
+    std::shared_ptr<Memory> LoadStoreBuffer::export_instruction_memory() const {
+        if (memory) {
+            return memory;
+        }
+        throw std::runtime_error("Memory is not loaded. Cannot export instruction memory.");
     }
 
 }  // namespace norb::riscv

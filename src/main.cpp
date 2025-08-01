@@ -2,7 +2,7 @@
 // - this is the main entrypoint for the simulator
 
 #include "third_party/logger.hpp"
-#include "control.hpp"
+#include "simulator.hpp"
 #include "utility/constants.hpp"
 
 namespace C = norb::riscv::constants;

@@ -23,7 +23,7 @@ namespace norb::riscv {
         // Communication buses
         // - control unit
         Bus<bool> bus_rob_has_committed_exit;
-        ChannelReader<Instruction> chan_con_rob_next_instruction;
+        ChannelReader<Instruction> chan_ifm_rob_next_instruction;
         std::shared_ptr<CommonDataBus> cdb_ref = nullptr;
 
         // - reservation station
@@ -58,7 +58,7 @@ namespace norb::riscv {
         [[nodiscard]] bool almost_full() const;
         [[nodiscard]] bool empty() const;
 
-        void instruction_fetch();
+        void on_fetch();
         void on_issue();
         void on_broadcast();
         void on_commit();
